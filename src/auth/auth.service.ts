@@ -58,7 +58,7 @@ export class AuthService{
     async signToken(userid: string, email: string, role: string, name:string): Promise<{ access_token: string }> {
         const payload = { sub: userid, email,role };
         const token = await this.jwt.signAsync(payload, {
-            expiresIn: "30m",
+            expiresIn: "10d",
             secret: process.env.JWT_SECRET,
         });
         return {

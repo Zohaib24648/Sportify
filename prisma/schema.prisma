@@ -67,7 +67,7 @@ model Court {
   description        String
   court_location     String
   hourly_rate        Int
-  min_down_payment   Decimal
+  min_down_payment   Int
   created_at         DateTime            @default(now())
   updated_at         DateTime            @updatedAt
   court_specs        Court_Specs[]

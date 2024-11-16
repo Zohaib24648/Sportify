@@ -42,11 +42,11 @@ export class BookingController {
     return this.bookingService.getBookingDetails(id);
     }
 
-//   //Create Payment
-//   @Post('create_payment')
-//   async createPayment(@Body() payment: any) {
-//     return this.bookingService.createPayment(payment);
-//     }
+  //Create Payment
+  @Post('create_payment')
+  async createPayment(@Body() payment: any) {
+    return this.bookingService.createPayment(payment.booking_id, payment.payment_amount, payment.payment_method);
+    }
 
   //Get Payments
   @Get('get_payments')
@@ -64,6 +64,18 @@ export class BookingController {
   @Put('update_payment/:id')
   async updatePayment(@Param('id') id: string, @Body() payment: any) {
     return this.bookingService.updatePayment(id, payment);
+    }
+
+  @Put('upload_payment_receipt')
+  async uploadPaymentReceipt(@Body() dto : any) {
+    console.log(dto);
+    return this.bookingService.uploadPaymentImage(dto);
+    }
+
+  @Put('verify_payment')
+  async verifyPayment(@Body() dto : any) {
+    console.log(dto);
+    return this.bookingService.verifyPayment(dto);
     }
 
   //Delete Payment

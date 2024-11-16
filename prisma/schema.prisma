@@ -40,6 +40,12 @@ enum Payment_Status {
   verification_pending
 }
 
+enum PAYMENT_METHOD {
+  CASH
+  CARD
+  ONLINE
+}
+
 model User {
   id            String   @id @default(uuid())
   name          String
@@ -147,8 +153,8 @@ model Payment {
   booking_id         String
   payment_status     Payment_Status @default(not_paid)
   payment_amount     Int
-  payment_method     String
-  payment_time       DateTime
+  payment_method     PAYMENT_METHOD @default(ONLINE)
+  payment_time       DateTime       @default(now())
   payment_image_link String
   booking            Booking        @relation(fields: [booking_id], references: [id])
 }

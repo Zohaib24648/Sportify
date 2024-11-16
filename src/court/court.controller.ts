@@ -170,4 +170,15 @@ export class CourtController {
 
 
 
+    // Get Court Games
+    @UseGuards(AuthGuard('jwt'))
+    @Get('get_court_games/:id')
+    get_court_games(@Param('id') id: string) {
+        return this.court_service.get_court_games(id);
+        }
+
+
+    
+
+
 }

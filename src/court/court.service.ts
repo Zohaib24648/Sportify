@@ -11,6 +11,8 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class CourtService {
 
     constructor (private  prisma:PrismaService ){}
+
+
     
     
     async createCourt(dto:CourtDto){
@@ -51,10 +53,7 @@ export class CourtService {
                     id:id
                 } 
     
-            })
-            if (court === null){
-                return "Court not found"
-            }       
+            })      
             return court;
 
     }

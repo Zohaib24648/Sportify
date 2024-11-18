@@ -43,6 +43,15 @@ export class CourtController {
         return this.court_service.updateCourt(id,dto);
     }
 
+    //Update Court Availability
+    @Roles('admin')
+    @UseGuards(AuthGuard('jwt'),RolesGuard)
+    @Put('upsert_court_availability/:id')
+    uCourpserttAvailability(@Param('id') id:string, @Body() dto:any){
+        return this.court_service.upsert_court_availability(id,dto);
+    }
+
+
 
 
     //Delete Court
@@ -112,70 +121,11 @@ export class CourtController {
     @UseGuards(AuthGuard('jwt'),RolesGuard)
     @Post ('update_court_availability/:id')
     update_court_availability(@Param('id') id:string, @Body() dto:any){
-        return this.court_service.update_court_availability(id,dto);
+        return this.court_service.upsert_court_availability(id,dto);
     }
    
    
 
-
-    // Create Game
-    @Roles('admin')
-    @UseGuards(AuthGuard('jwt'),RolesGuard)
-    @Post('create_game')
-    create_game(@Body() dto: any) {
-        return this.court_service.create_game(dto);
-        }
-
-
-    // Get Games
-    @UseGuards(AuthGuard('jwt'))
-    @Get('get_games')
-    get_games() {
-        return this.court_service.get_games();
-    }
-
-    // Delete Game
-    @Roles('admin')
-    @UseGuards(AuthGuard('jwt'),RolesGuard)
-    @Delete('delete_game/:id')
-    delete_game(@Param('id') id: string) {
-        return this.court_service.delete_game(id);
-    }
-
-
-    // Update Game
-    @Roles('admin')
-    @UseGuards(AuthGuard('jwt'),RolesGuard)
-    @Post('update_game/:id')
-    update_game(@Param('id') id: string, @Body() dto: any) {
-        return this.court_service.update_game(id, dto);
-    }
-
-    // Add Game to Court
-    @Roles('admin')
-    @UseGuards(AuthGuard('jwt'),RolesGuard)
-    @Post('add_game_to_court')
-    add_court_games(@Body() dto: any) {
-        return this.court_service.addGameToCourt(dto);
-    }
-
-
-    // Delete Game from Court
-    @Roles('admin')
-    @UseGuards(AuthGuard('jwt'),RolesGuard)
-    @Delete('delete_game_from_court')
-    delete_court_games(@Body() dto: any ) {
-        return this.court_service.delete_court_game(dto);
-    }
-
-
-
-    // Get Court Games
-    @UseGuards(AuthGuard('jwt'))
-    @Get('get_court_games/:id')
-    get_court_games(@Param('id') id: string) {
-        return this.court_service.get_court_games(id);
-        }
 
 
     

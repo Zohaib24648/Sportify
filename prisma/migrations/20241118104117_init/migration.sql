@@ -8,7 +8,10 @@ CREATE TYPE "Review_Status" AS ENUM ('pending', 'approved', 'rejected');
 CREATE TYPE "Booking_Status" AS ENUM ('pending', 'confirmed', 'cancelled', 'completed');
 
 -- CreateEnum
-CREATE TYPE "Payment_Status" AS ENUM ('not_paid', 'paid', 'refunded', 'verification_pending');
+CREATE TYPE "Payment_Status" AS ENUM ('not_paid', 'paid', 'refunded', 'refund_pending', 'verification_pending');
+
+-- CreateEnum
+CREATE TYPE "PAYMENT_METHOD" AS ENUM ('CASH', 'CARD', 'ONLINE');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -16,7 +19,7 @@ CREATE TABLE "User" (
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password_hash" TEXT,
-    "user_pfp_link" TEXT,
+    "user_pfp_link" TEXT NOT NULL DEFAULT 'https://www.shutterstock.com/shutterstock/photos/1677509740/display_1500/stock-vector-default-avatar-profile-icon-social-media-user-vector-1677509740.jpg',
     "user_phone" TEXT NOT NULL,
     "role" "Role" NOT NULL DEFAULT 'customer',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -31,7 +34,7 @@ CREATE TABLE "Court" (
     "name" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "court_location" TEXT NOT NULL,
-    "hourly_rate" INTEGER NOT NULL,
+    "hourly_rate" DECIMAL(65,30) NOT NULL,
     "min_down_payment" DECIMAL(65,30) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -43,7 +46,6 @@ CREATE TABLE "Court" (
 CREATE TABLE "Game_Type" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "court_id" TEXT NOT NULL,
 
     CONSTRAINT "Game_Type_pkey" PRIMARY KEY ("id")
 );
@@ -100,8 +102,8 @@ CREATE TABLE "Court_Close_Dates" (
 CREATE TABLE "Slot" (
     "id" TEXT NOT NULL,
     "court_id" TEXT NOT NULL,
-    "Start_time" TIMESTAMP(3) NOT NULL,
-    "End_time" TIMESTAMP(3) NOT NULL,
+    "start_time" TIMESTAMP(3) NOT NULL,
+    "end_time" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Slot_pkey" PRIMARY KEY ("id")
 );
@@ -126,8 +128,8 @@ CREATE TABLE "Payment" (
     "booking_id" TEXT NOT NULL,
     "payment_status" "Payment_Status" NOT NULL DEFAULT 'not_paid',
     "payment_amount" INTEGER NOT NULL,
-    "payment_method" TEXT NOT NULL,
-    "payment_time" TIMESTAMP(3) NOT NULL,
+    "payment_method" "PAYMENT_METHOD" NOT NULL DEFAULT 'ONLINE',
+    "payment_time" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "payment_image_link" TEXT NOT NULL,
 
     CONSTRAINT "Payment_pkey" PRIMARY KEY ("id")
@@ -152,6 +154,9 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_user_phone_key" ON "User"("user_phone");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Game_Type_name_key" ON "Game_Type"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Court_Game_Type_court_id_game_type_id_key" ON "Court_Game_Type"("court_id", "game_type_id");

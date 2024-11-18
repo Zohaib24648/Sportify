@@ -6,9 +6,12 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 import { CourtModule } from './court/court.module';
 import { BookingModule } from './booking/booking.module';
+import { PaymentModule } from './payment/payment.module';
+import { SlotModule } from './slot/slot.module';
+import { GameModule } from './game/game.module';
 
 
 @Module({
-  imports: [AuthModule, UserModule, PrismaModule, ConfigModule.forRoot({}), CourtModule, BookingModule],
+  imports: [AuthModule, UserModule, PrismaModule, ConfigModule.forRoot({}), CourtModule, BookingModule, PaymentModule, SlotModule, GameModule],
 })
 export class AppModule {}

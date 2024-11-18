@@ -37,6 +37,7 @@ enum Payment_Status {
   not_paid
   paid
   refunded
+  refund_pending
   verification_pending
 }
 
@@ -78,6 +79,8 @@ model Court {
   game_types         Court_Game_Type[]
 }
 
+//ask zain bhai for the correct way to implement this
+//implement Media uploading
 model Game_Type {
   id     String            @id @default(uuid())
   name   String            @unique
@@ -128,8 +131,8 @@ model Court_Close_Dates {
 model Slot {
   id         String   @id @default(uuid())
   court_id   String
-  Start_time DateTime
-  End_time   DateTime
+  start_time DateTime
+  end_time   DateTime
   court      Court    @relation(fields: [court_id], references: [id])
   Booking    Booking?
 }
@@ -137,14 +140,14 @@ model Slot {
 model Booking {
   id           String         @id @default(uuid())
   user_id      String
-  slot_id      String         @unique
+  slot_id      String?        @unique
   status       Booking_Status @default(pending)
   total_amount Int
   paid_amount  Int
   Created_at   DateTime       @default(now())
   Updated_at   DateTime       @updatedAt
   user         User           @relation(fields: [user_id], references: [id])
-  slot         Slot           @relation(fields: [slot_id], references: [id])
+  slot         Slot?          @relation(fields: [slot_id], references: [id])
   Payment      Payment[]
 }
 

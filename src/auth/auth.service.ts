@@ -1,5 +1,5 @@
 //auth/auth.service.ts
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { PrismaClient } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { AuthDto } from "./dto";
@@ -13,6 +13,7 @@ export class AuthService{
 
 
     constructor (private  prisma:PrismaService,private jwt:JwtService ){}
+
     async signup(req:SignupDto){
         
         const email = req.email;
@@ -20,18 +21,25 @@ export class AuthService{
         const name = req.name;
         const user_phone = req.user_phone;
 
-        const user = await this.prisma.user.create({
-            data:{
-                email:email,
-                password_hash : hash,
-                name:name,
-                user_phone:user_phone,
-                role:"user"
-                
-            }
-        })
-        return this.signToken(user.id,user.email,user.name,user.role)
-    }
+        try{
+            const user = await this.prisma.user.create({
+                data:{
+                    email:email,
+                    password_hash : hash,
+                    name:name,
+                    user_phone:user_phone,
+                    role:"user"
+                    
+                }
+            })
+            return this.signToken(user.id,user.email,user.role,user.name);
+
+        }catch(e){
+            throw new UnauthorizedException("Email or Number already exists");
+        }
+               }
+
+
 
     async signin( req:SigninDto){
         console.log(req)
@@ -44,13 +52,13 @@ export class AuthService{
         })
 
         if (!user){
-            return "user not found"
+            throw new NotFoundException('User not found');
         }
         const match = await argon.verify(user.password_hash,req.password)
         if (match){
             return this.signToken(user.id,user.email,user.role,user.name)
         }
-        return "incorrect password"
+        throw new UnauthorizedException('Incorrect password');
         //if the password is correct then return the token
         
     }

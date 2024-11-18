@@ -1,11 +1,30 @@
+import { Decimal } from "@prisma/client/runtime/library";
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+
 //auth/dto/court.dto.ts
 export class CourtDto {
 
+    @IsString()
+    @IsNotEmpty()
     name: string;
-    description: string;
+  
+    @IsString()
+    @IsOptional()
+    description?: string;
+  
+    @IsString()
+    @IsNotEmpty()
     court_location: string;
-    hourly_rate: number;
+  
+    @IsNumber()
+    @IsNotEmpty()
+    hourly_rate:number;
+  
+    @IsNumber()
+    @IsNotEmpty()
     min_down_payment: number;
+
+    
     created_at: Date;
     updated_at: Date;
     // court_specs: Court_Specs[];

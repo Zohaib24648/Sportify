@@ -1,13 +1,15 @@
+//booking.controller.ts
 import { Controller, UseGuards } from '@nestjs/common';
 import { Delete, Get, Module, Post, Put,Body,Param } from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { Roles } from 'src/auth/guard/roles.decorator';
+import { PaymentService } from 'src/payment/payment.service';
 
 @Controller('booking')
 export class BookingController {
-    constructor(private bookingService: BookingService) {}
+    constructor(private bookingService: BookingService, private paymentservice: PaymentService) {}
 
   //Create Booking
   @UseGuards(AuthGuard('jwt'))
@@ -31,9 +33,9 @@ export class BookingController {
   }
 
   //Delete Booking
-  @Delete('delete_booking/:id')
-  async deleteBooking(@Param('id') id: string) {
-    return this.bookingService.deleteBooking(id);
+  @Post('cancel_booking/:id')
+  async cancelBooking(@Param('id') id: string) {
+    return this.bookingService.cancelBooking(id);
     }
 
   //Get Booking Details
@@ -42,46 +44,11 @@ export class BookingController {
     return this.bookingService.getBookingDetails(id);
     }
 
-  //Create Payment
-  @Post('create_payment')
-  async createPayment(@Body() payment: any) {
-    return this.bookingService.createPayment(payment.booking_id, payment.payment_amount, payment.payment_method);
+  //Get Bookings by User
+  @Get('get_bookings_by_user/:id')
+  async getBookingsByUser(@Param('id') id: string) {
+    return this.bookingService.getBookingsByUserId(id);
     }
 
-  //Get Payments
-  @Get('get_payments')
-  async getPayments() {
-    return this.bookingService.getPayments();
-    }
-
-  //Get Payment By Id
-  @Get('get_payment_by_id/:id')
-  async getPaymentById(@Param('id') id: string) {
-    return this.bookingService.getPaymentById(id);
-    }
-
-  //Update Payment
-  @Put('update_payment/:id')
-  async updatePayment(@Param('id') id: string, @Body() payment: any) {
-    return this.bookingService.updatePayment(id, payment);
-    }
-
-  @Put('upload_payment_receipt')
-  async uploadPaymentReceipt(@Body() dto : any) {
-    console.log(dto);
-    return this.bookingService.uploadPaymentImage(dto);
-    }
-
-  @Put('verify_payment')
-  async verifyPayment(@Body() dto : any) {
-    console.log(dto);
-    return this.bookingService.verifyPayment(dto);
-    }
-
-  //Delete Payment
-  @Delete('delete_payment/:id')
-  async deletePayment(@Param('id') id: string) {
-    return this.bookingService.deletePayment(id);
-    }
-
+ 
 }

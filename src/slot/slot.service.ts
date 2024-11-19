@@ -1,6 +1,7 @@
 //slotservice.ts
 
 import { Injectable } from '@nestjs/common';
+import { SlotDto } from 'src/auth/dto';
 import { CourtService } from 'src/court/court.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -10,7 +11,7 @@ export class SlotService {
 
 
 
-    async createSlot(dto: any) {
+    async createSlot(dto: SlotDto) {
         const { court_id, start_time, end_time } = dto;
     
         // Convert times to Date objects

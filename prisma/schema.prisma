@@ -79,7 +79,6 @@ model Court {
   game_types         Court_Game_Type[]
 }
 
-//ask zain bhai for the correct way to implement this
 //implement Media uploading
 model Game_Type {
   id     String            @id @default(uuid())

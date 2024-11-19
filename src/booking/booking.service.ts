@@ -133,24 +133,41 @@ export class BookingService {
     
             console.log(deleted_slot);
     
-            // Step 3: Update payments associated with the booking
-            const payments = await prisma.payment.updateMany({
+            // Step 3: Update payments based on their current status
+            const payments = await prisma.payment.findMany({
                 where: {
                     booking_id: id,
-                    payment_status: 'paid' as Payment_Status,
-                },
-                data: {
-                    payment_status: 'refund_pending' as Payment_Status,
                 },
             });
     
-            console.log(payments);
+            for (const payment of payments) {
+                if (payment.payment_status === 'verification_pending' || payment.payment_status === 'paid') {
+                    // Update to refund_pending if status is pending_verification or paid
+                    await prisma.payment.update({
+                        where: { id: payment.id },
+                        data: {
+                            payment_status: 'refund_pending' as Payment_Status,
+                        },
+                    });
+                } else {
+                    // Update to refunded for any other statuses
+                    await prisma.payment.update({
+                        where: { id: payment.id },
+                        data: {
+                            payment_status: 'refunded' as Payment_Status,
+                        },
+                    });
+                }
+            }
+    
+            console.log(`Payments updated for booking ID ${id}`);
     
             return { booking, deleted_slot, payments };
         });
     
         return result;
     }
+    
     
     
     async getBookingsByUserId(user_id: string) {

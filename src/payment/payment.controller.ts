@@ -55,12 +55,4 @@ export class PaymentController {
    console.log(dto);
    return this.paymentService.verifyPayment(dto);
    }
-
-//  //Delete Payment
-//  @Delete('delete_payment/:id')
-//  async deletePayment(@Param('id') id: string) {
-//    return this.paymentService.deletePayment(id);
-//    }
-
-
 }

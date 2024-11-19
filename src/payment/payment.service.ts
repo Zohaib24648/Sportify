@@ -1,8 +1,10 @@
 //paymernt service
-import { Injectable } from '@nestjs/common';
-import { PAYMENT_METHOD, Payment_Status } from '@prisma/client';
+import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { PAYMENT_METHOD, Payment_Status, Prisma } from '@prisma/client';
 import { CourtService } from 'src/court/court.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { PaymentDto } from './dto/payment.dto';
+import { PImageDto } from './dto/p_image.dto';
 
 @Injectable()
 export class PaymentService {
@@ -10,92 +12,88 @@ export class PaymentService {
     constructor(private readonly prisma: PrismaService, private readonly courtService: CourtService ) {}
 
     
-    async createPayment(booking_id: string, payment_amount: number, payment_method: string) {
-        console.log(booking_id, payment_amount, payment_method);
-    
-        // Step 1: Fetch booking details with related slot and court information
-        const bookingDetails = await this.prisma.booking.findFirst({
-            where: { id: booking_id , 
-                slot_id: {
-                not: null}, 
-            },
-            include: {
-                slot: {
-                    include: {
-                        court: true,
-                    },
-                },
-            },
-        });
-    
-        console.log(bookingDetails);
-    
-        if (!bookingDetails) {
-            throw new Error('Booking not found');
-        }
-    
-        const { total_amount, paid_amount, slot } = bookingDetails;
-        const { min_down_payment } = slot.court;
-    
-        // Step 2: Check for pending payments for this booking
-        const pendingPayments = await this.prisma.payment.findFirst({
-            where: {
-                booking_id: booking_id,
-                payment_status: 'not_paid', // Check if there's an unpaid payment
-            },
-        });
-    
-        if (pendingPayments) {
-            throw new Error(
-                `A payment is already pending for this booking. Complete or verify the previous payment first.`
-            );
-        }
-    
-        // Step 3: Calculate remaining amount and threshold amount
-        const remaining_amount = total_amount - paid_amount;
-        const threshold_amount = (min_down_payment * total_amount)/ 100;
-    
-        if (paid_amount >= total_amount) {
-            throw new Error('Payment already completed');
-        }
-    
-        // Step 4: Determine if it's the first payment or subsequent payments
-        if (remaining_amount === total_amount) {
-            // First payment: Ensure payment meets the minimum threshold
-            if (payment_amount < threshold_amount) {
-                throw new Error(
-                    `First payment must be at least the threshold amount: ${threshold_amount}`
-                );
-            }
-        } else {
-            // Subsequent payments: Ensure payment does not exceed remaining amount
-            if (payment_amount > remaining_amount) {
-                throw new Error(
-                    `Payment exceeds the remaining amount. Remaining amount: ${remaining_amount}`
-                );
-            }
-        }
-    
-        // Step 5: Create the payment record
-        const payment = await this.prisma.payment.create({
-            data: {
-                booking_id: booking_id,
-                payment_amount: payment_amount,
-                payment_status: 'not_paid',
-                payment_method: payment_method as PAYMENT_METHOD,
-                payment_image_link: '', // Add image link if available
-            },
-        });
-    
-        console.log('Payment created:', payment);
-        return payment;
+async createPayment(dto: PaymentDto) {
+    const { booking_id, payment_amount, payment_method } = dto;
+  try {
+    // Fetch booking details with slot and court information
+    const bookingDetails = await this.prisma.booking.findFirst({
+      where: {
+        id: booking_id,
+        slot_id: { not: null },
+      },
+      include: {
+        slot: {
+          include: { court: true },
+        },
+      },
+    });
+
+    if (!bookingDetails) {
+      throw new NotFoundException('Booking not found');
     }
+
+    const { total_amount, paid_amount, slot } = bookingDetails;
+    const { min_down_payment } = slot.court;
+
+    // Check for pending payments
+    const pendingPayments = await this.prisma.payment.findFirst({
+      where: {
+        booking_id,
+        payment_status: 'not_paid',
+      },
+    });
+
+    if (pendingPayments) {
+      throw new ConflictException('A payment is already pending for this booking');
+    }
+
+    // Calculate remaining and threshold amounts
+    const remainingAmount = total_amount - paid_amount;
+    const thresholdAmount = (min_down_payment * total_amount) / 100;
+
+    if (paid_amount >= total_amount) {
+      throw new BadRequestException('Payment already completed');
+    }
+
+    if (remainingAmount === total_amount && payment_amount < thresholdAmount) {
+      throw new BadRequestException(
+        `First payment must meet the minimum threshold: ${thresholdAmount}`
+      );
+    }
+
+    if (payment_amount > remainingAmount) {
+      throw new BadRequestException(
+        `Payment exceeds the remaining amount: ${remainingAmount}`
+      );
+    }
+
+    // Create the payment record
+    return await this.prisma.payment.create({
+      data: {
+        booking_id,
+        payment_amount,
+        payment_status: 'not_paid',
+        payment_method: payment_method as PAYMENT_METHOD,
+        payment_image_link: '',
+      },
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      throw new InternalServerErrorException('Database error occurred while creating payment');
+    }
+    throw error;
+  }
+}
     
 
-    getPayments() {
-        const payments = this.prisma.payment.findMany();
-        return payments;
+async getPayments() {
+    try {
+      return await this.prisma.payment.findMany();
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to fetch payments');
     }
+  }
+  
 
     getpendingPayments() {
         const payments = this.prisma.payment.findMany({ where: { payment_status: 'verification_pending' } });
@@ -108,26 +106,21 @@ export class PaymentService {
     }
 
 
-        getPaymentById(id: any) {
+        getPaymentById(id: string) {
         const payment = this.prisma.payment.findUnique({ where: { id } });
         }
 
 
 
 
-        async uploadPaymentImage(dto: any) {
-            const { id, payment_image_link } = dto;
-            console.log(id, payment_image_link);
-            // Validate inputs
-            if (!id || !payment_image_link) {
-                throw new Error('Payment ID and image link are required');
-            }
+        async uploadPaymentImage(dto: PImageDto) {
+            const { booking_id, image } = dto;
         
             // Update the payment record
             const payment = await this.prisma.payment.update({
-                where: { id }, // Match the primary key
+                where: { id : booking_id }, // Match the primary key
                 data: { 
-                    payment_image_link, 
+                    payment_image_link: image, 
                     payment_status: 'verification_pending' // Update the status
                 },
             });
@@ -144,71 +137,98 @@ export class PaymentService {
         }
 
 
-    async verifyPayment(dto: { id: string }) {
-        const { id } = dto;
-    
-        // Step 1: Fetch the payment to check its current status
-        const payment = await this.prisma.payment.findUnique({
-            where: { id },
-        });
-    
-        if (!payment) {
-            throw new Error('Payment not found');
-        }
-    
-        if (payment.payment_status === 'paid') {
-            throw new Error('This payment has already been verified');
-        }
-    
-        // Step 2: Update payment status to 'paid'
-        const updatedPayment = await this.prisma.payment.update({
-            where: { id },
-            data: { payment_status: 'paid' },
-        });
-    
-        console.log('Payment verified:', updatedPayment);
-    
-        // Step 3: Fetch and update booking details
-        const booking = await this.prisma.booking.update({
-            where: { id: updatedPayment.booking_id },
-            data: {
-                paid_amount: { increment: updatedPayment.payment_amount },
-            },
-            include: {
-                slot: {
-                    include: {
+        async verifyPayment(paymentId: string) {
+            if (!paymentId) {
+              throw new BadRequestException('Payment ID is required');
+            }
+          
+            try {
+              return await this.prisma.$transaction(async (prisma) => {
+                // Step 1: Fetch the payment and validate its current status
+                const payment = await prisma.payment.findUnique({
+                  where: { id: paymentId },
+                });
+          
+                if (!payment) {
+                  throw new NotFoundException(`Payment with ID ${paymentId} not found`);
+                }
+          
+                if (payment.payment_status === 'paid') {
+                  throw new ConflictException('This payment has already been verified');
+                }
+          
+                // Step 2: Update payment status to 'paid'
+                const updatedPayment = await prisma.payment.update({
+                  where: { id: paymentId },
+                  data: { payment_status: 'paid' },
+                });
+          
+                console.log('Payment verified successfully:', updatedPayment);
+          
+                // Step 3: Fetch and update booking details
+                const booking = await prisma.booking.update({
+                  where: { id: updatedPayment.booking_id },
+                  data: {
+                    paid_amount: { increment: updatedPayment.payment_amount },
+                  },
+                  include: {
+                    slot: {
+                      include: {
                         court: true,
+                      },
                     },
-                },
-            },
-        });
+                  },
+                });
+          
+                if (!booking) {
+                  throw new InternalServerErrorException(
+                    `Failed to update booking for payment ID ${paymentId}`
+                  );
+                }
+          
+                // Step 4: Calculate minimum down payment and determine booking status
+                const { total_amount, paid_amount, status, slot } = booking;
+                const minDownPayment = (slot.court.min_down_payment * total_amount) / 100;
+          
+                let updatedStatus = null;
+          
+                if (paid_amount >= total_amount && status !== 'completed') {
+                  updatedStatus = 'completed'; // Fully paid
+                } else if (paid_amount >= minDownPayment && status !== 'confirmed') {
+                  updatedStatus = 'confirmed'; // Partially paid beyond threshold
+                }
+          
+                // Step 5: Update booking status if necessary
+                if (updatedStatus) {
+                  await prisma.booking.update({
+                    where: { id: booking.id },
+                    data: { status: updatedStatus },
+                  });
+          
+                  console.log(`Booking status updated to '${updatedStatus}'`);
+                  booking.status = updatedStatus; 
+                }
+          
+                // Return the updated payment and booking
+                return {
+                  message: 'Payment verified successfully',
+                  payment: updatedPayment,
+                  booking,
+                };
+              });
+            } catch (error) {
+              if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                throw new InternalServerErrorException(
+                  'A database error occurred while verifying payment'
+                );
+              }
+          
+              console.error('Error verifying payment:', error.message);
+              throw new InternalServerErrorException('Failed to verify payment');
+            }}
     
-        // Step 4: Determine booking status based on paid amount
-        const { total_amount, paid_amount, status, slot } = booking;
-        const min_down_payment = (slot.court.min_down_payment * total_amount) / 100;
     
-        let updatedStatus = null;
-    
-        if (paid_amount >= total_amount && status !== 'completed') {
-            updatedStatus = 'completed'; // Fully paid
-        } else if (paid_amount >= min_down_payment && paid_amount < total_amount && status !== 'confirmed') {
-            updatedStatus = 'confirmed'; // Partially paid beyond threshold
-        }
-    
-        // Step 5: Update status if necessary
-        if (updatedStatus) {
-            await this.prisma.booking.update({
-                where: { id: updatedPayment.booking_id },
-                data: { status: updatedStatus },
-            });
-            booking.status = updatedStatus; // Update in-memory object
-        }
-    
-        return { payment: updatedPayment, booking };
-    }
-
-    
-    deletePayment(id: any) {
+            deletePayment(id: any) {
         throw new Error('Method not implemented.');
     }
 }

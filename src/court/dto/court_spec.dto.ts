@@ -13,7 +13,3 @@ export class CourtSpecDto {
 }
 
 
-
-// name String
-// court_id String
-// value String

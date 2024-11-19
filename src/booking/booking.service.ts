@@ -1,9 +1,10 @@
 //booking.service.ts
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Booking_Status, PAYMENT_METHOD, Payment_Status, Prisma } from '@prisma/client';
 import { SlotService } from 'src/slot/slot.service';
 import { CourtService } from 'src/court/court.service';
+import { CreateBookingDto } from './dto/createbooking.dto';
 
 
 @Injectable()
@@ -12,47 +13,47 @@ export class BookingService {
 
     
 
-    async createBooking(dto: any) {
+    async createBooking(dto: CreateBookingDto) {
         const { user_id, court_id, start_time, end_time } = dto;
     
-        // Step 1: Use Prisma transaction for atomicity
-        return await this.prisma.$transaction(async (prisma) => {
-            // Step 2: Create a slot
-            const slot = await this.slotService.createSlot({
-               
-                    court_id,
-                    start_time: start_time,
-                    end_time: end_time,
-            });
-    
-            // Step 3: Fetch court details (including hourly rate)
-            const court = await this.courtService.get_court_details(court_id);
-            if (!court) {
-                throw new Error('Court not found');
-            }    
-            // Step 4: Calculate booking duration in half-hours
-            const bookingDurationInMilliseconds =
-                new Date(end_time).getTime() - new Date(start_time).getTime();
-            const  bookingDurationInHalfHours = Math.ceil(
-                bookingDurationInMilliseconds / (1000 * 60 * 30) // 30 minutes = 1800 seconds
-            );
-    
-            // Step 5: Calculate total amount (based on half-hours)
-            const total_amount = (bookingDurationInHalfHours / 2) * court.hourly_rate;
-            const paid_amount = 0; // Default paid amount is 0
-    
-            // Step 6: Create a booking
-            const booking = await prisma.booking.create({
-                data: {
-                    user_id,
-                    slot_id: slot.id,
-                    status: 'pending',
-                    total_amount,
-                    paid_amount,
-                    Created_at: new Date(),
-                    Updated_at: new Date(),
-                },
-            });
+        const court = await this.courtService.get_court_details(court_id);
+  
+        if (!court) {
+    throw new NotFoundException('Court not found');
+  }
+
+  const bookingDurationInMilliseconds =
+    new Date(end_time).getTime() - new Date(start_time).getTime();
+
+  if (bookingDurationInMilliseconds <= 0) {
+    throw new BadRequestException('Invalid booking duration');
+  }
+
+  return this.prisma.$transaction(async (prisma) => {
+    // Slot creation
+    const slot = await this.slotService.createSlot({
+      court_id,
+      start_time,
+      end_time,
+    });
+
+    const bookingDurationInHalfHours = Math.ceil(
+      bookingDurationInMilliseconds / (1000 * 60 * 30)
+    );
+
+    const total_amount = (bookingDurationInHalfHours / 2) * court.hourly_rate;
+
+    const booking = await prisma.booking.create({
+      data: {
+        user_id,
+        slot_id: slot.id,
+        status: 'pending',
+        total_amount,
+        paid_amount: 0,
+        Created_at: new Date(),
+        Updated_at: new Date(),
+      },
+    });
     
             // Step 7: Return the created booking and slot
             return {
@@ -65,7 +66,7 @@ export class BookingService {
     
     
     // Multiple Functions Required
-   async  get_all_Bookings(dto:any) {
+   async  get_all_Bookings() {
         const bookings = await this.prisma.booking.findMany(
             {
                 include: {
@@ -100,73 +101,50 @@ export class BookingService {
     }
 
     async cancelBooking(id: string) {
-        console.log(id);
-    
-        const result = await this.prisma.$transaction(async (prisma) => {
-            // Step 1: Update booking status and set slot_id to null
-            const booking = await prisma.booking.update({
-                where: { id: id },
-                data: {
-                    status: 'cancelled' as Booking_Status,
-                    slot_id: null,
-                    Updated_at: new Date(),
-                },
-                include: {
-                    slot: {
-                        include: {
-                            court: true,
-                        },
-                    },
-                },
-            });
-    
-            const court_id = booking.slot?.court.id;
-    
-            console.log(booking);
-    
-            // Step 2: Delete slots associated with the court
-            const deleted_slot = await prisma.slot.deleteMany({
-                where: {
-                    court_id: court_id,
-                },
-            });
-    
-            console.log(deleted_slot);
-    
-            // Step 3: Update payments based on their current status
-            const payments = await prisma.payment.findMany({
-                where: {
-                    booking_id: id,
-                },
-            });
-    
-            for (const payment of payments) {
-                if (payment.payment_status === 'verification_pending' || payment.payment_status === 'paid') {
-                    // Update to refund_pending if status is pending_verification or paid
-                    await prisma.payment.update({
-                        where: { id: payment.id },
-                        data: {
-                            payment_status: 'refund_pending' as Payment_Status,
-                        },
-                    });
-                } else {
-                    // Update to refunded for any other statuses
-                    await prisma.payment.update({
-                        where: { id: payment.id },
-                        data: {
-                            payment_status: 'refunded' as Payment_Status,
-                        },
-                    });
-                }
-            }
-    
-            console.log(`Payments updated for booking ID ${id}`);
-    
-            return { booking, deleted_slot, payments };
+        const booking = await this.prisma.booking.findUnique({
+          where: { id },
+          include: { slot: true },
         });
-    
-        return result;
-    }
+      
+        if (!booking) {
+          throw new NotFoundException('Booking not found');
+        }
+      
+        return this.prisma.$transaction(async (prisma) => {
+          const updatedBooking = await prisma.booking.update({
+            where: { id },
+            data: {
+              status: 'cancelled',
+              slot_id: null,
+              Updated_at: new Date(),
+            },
+          });
+      
+          if (booking.slot) {
+            await prisma.slot.delete({
+              where: { id: booking.slot.id },
+            });
+          }
+      
+          const payments = await prisma.payment.findMany({
+            where: { booking_id: id },
+          });
+      
+          for (const payment of payments) {
+            const statusUpdate = payment.payment_status === 'paid'
+              ? 'refund_pending'
+              : 'refunded';
+      
+            await prisma.payment.update({
+              where: { id: payment.id },
+              data: { payment_status: statusUpdate },
+            });
+          }
+      
+          return updatedBooking;
+        });
+      }
+      
     
     
     

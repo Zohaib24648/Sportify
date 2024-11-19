@@ -1,5 +1,5 @@
 //auth/dto/signup.dto.ts
-import { IsNotEmpty, IsString } from "class-validator";
+import { IsNotEmpty, IsPhoneNumber, IsString } from "class-validator";
 import { AuthDto } from "./auth.dto";
 
 export class SignupDto extends AuthDto {
@@ -8,6 +8,6 @@ export class SignupDto extends AuthDto {
     name: string;
 
     @IsNotEmpty()
-    @IsString()
+    @IsPhoneNumber()
     user_phone: string;
 }

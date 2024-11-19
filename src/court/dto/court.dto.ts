@@ -10,7 +10,7 @@ export class CourtDto {
   
     @IsString()
     @IsOptional()
-    description?: string;
+    description: string;
   
     @IsString()
     @IsNotEmpty()
@@ -23,9 +23,5 @@ export class CourtDto {
     @IsNumber()
     @IsNotEmpty()
     min_down_payment: number;
-
-    
-    created_at: Date;
-    updated_at: Date;
 
 }

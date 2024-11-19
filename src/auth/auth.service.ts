@@ -1,6 +1,6 @@
 //auth/auth.service.ts
-import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
-import { PrismaClient } from "@prisma/client";
+import { ConflictException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { AuthDto } from "./dto";
 import * as argon from "argon2";
@@ -32,38 +32,43 @@ export class AuthService{
                     
                 }
             })
-            return this.signToken(user.id,user.email,user.role,user.name);
+            return this.signToken(user.id,user.email,user.role);
 
-        }catch(e){
-            throw new UnauthorizedException("Email or Number already exists");
         }
-               }
-
-
-
-    async signin( req:SigninDto){
-        console.log(req)
-        // return "this is the sign in route from service"
-        //check the database for the user
-        const user = await this.prisma.user.findFirst({
-            where:{
-                email:req.email
+        catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError) {
+              // Handle unique constraint violation
+              if (error.code === 'P2002') {
+                throw new ConflictException('Email or phone number already exists');
+              }
             }
-        })
-
-        if (!user){
-            throw new NotFoundException('User not found');
-        }
-        const match = await argon.verify(user.password_hash,req.password)
-        if (match){
-            return this.signToken(user.id,user.email,user.role,user.name)
-        }
-        throw new UnauthorizedException('Incorrect password');
-        //if the password is correct then return the token
-        
+            throw new InternalServerErrorException('An unexpected error occurred');
+          }
     }
 
-    async signToken(userid: string, email: string, role: string, name:string): Promise<{ access_token: string }> {
+
+
+    async signin(req: SigninDto) {
+        const { email, password } = req;
+      
+        const user = await this.prisma.user.findFirst({
+          where: { email },
+        });
+      
+        if (!user || !user.password_hash) {
+          throw new UnauthorizedException('Invalid email or password');
+        }
+      
+        const match = await argon.verify(user.password_hash, password);
+        if (!match) {
+          throw new UnauthorizedException('Invalid email or password');
+        }
+      
+        return this.signToken(user.id, user.email, user.role);
+      }
+      
+
+    async signToken(userid: string, email: string, role: string): Promise<{ access_token: string }> {
         const payload = { sub: userid, email,role };
         const token = await this.jwt.signAsync(payload, {
             expiresIn: "10d",

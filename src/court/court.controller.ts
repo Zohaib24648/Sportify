@@ -1,13 +1,14 @@
 //court/court.controller.ts
 import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { CourtService } from './court.service';
-import { CourtDto } from 'src/auth/dto/court.dto';
+import { CourtDto } from 'src/court/dto/court.dto';
 import { JwtService } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from 'src/auth/guard/roles.decorator';
 import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { Role } from '@prisma/client';
-import { CourtSpecDto } from 'src/auth/dto/court_spec.dto';
+import { CourtSpecDto } from 'src/court/dto/court_spec.dto';
+import { CourtAvailabilityDto } from './dto/courtavailability.dto';
 
 
 @Controller('court')
@@ -39,7 +40,7 @@ export class CourtController {
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
     @Put('update_court/:id')
-    updateCourt(@Param('id') id:string,  @Body() dto:any){
+    updateCourt(@Param('id') id:string,  @Body() dto:CourtDto){
         return this.court_service.updateCourt(id,dto);
     }
 
@@ -47,7 +48,7 @@ export class CourtController {
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
     @Put('upsert_court_availability/:id')
-    uCourpserttAvailability(@Param('id') id:string, @Body() dto:any){
+    uCourpserttAvailability(@Param('id') id:string, @Body() dto:CourtAvailabilityDto){
         return this.court_service.upsert_court_availability(id,dto);
     }
 
@@ -55,7 +56,6 @@ export class CourtController {
 
 
     //Delete Court
-
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
     @Delete('delete_court/:id')
@@ -65,7 +65,6 @@ export class CourtController {
 
 
     //Get Court Details
-
     @UseGuards(AuthGuard('jwt'))
     @Get('get_court_details/:id')
     get_court_details(@Param('id') id:string){
@@ -77,7 +76,7 @@ export class CourtController {
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
     @Post ('add_court_specs/:id')
-    add_court_specs(@Param('id') id:string, @Body() dto:any){
+    add_court_specs(@Param('id') id:string, @Body() dto:CourtSpecDto){
         return this.court_service.add_court_spec(id,dto);
     }
 
@@ -104,7 +103,7 @@ export class CourtController {
       @Roles('admin')
       @UseGuards(AuthGuard('jwt'),RolesGuard)
       @Post ('update_court_specs/:id')
-      update_court_specs(@Param('id') id:string, @Body() dto:any){
+      update_court_specs(@Param('id') id:string, @Body() dto:CourtSpecDto){
           return this.court_service.update_court_spec(id,dto);
       }
 
@@ -120,15 +119,7 @@ export class CourtController {
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
     @Post ('update_court_availability/:id')
-    update_court_availability(@Param('id') id:string, @Body() dto:any){
+    update_court_availability(@Param('id') id:string, @Body() dto:CourtAvailabilityDto){
         return this.court_service.upsert_court_availability(id,dto);
     }
-   
-   
-
-
-
-    
-
-
 }

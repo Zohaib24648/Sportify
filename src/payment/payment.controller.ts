@@ -1,6 +1,7 @@
 //payment.controller.ts
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { PaymentService } from './payment.service';
+import { PaymentDto } from './dto/payment.dto';
 
 @Controller('payment')
 export class PaymentController {
@@ -10,8 +11,8 @@ export class PaymentController {
 
  //Create Payment
  @Post('create_payment')
- async createPayment(@Body() payment: any) {
-   return this.paymentService.createPayment(payment.booking_id, payment.payment_amount, payment.payment_method);
+ async createPayment(@Body() dto: PaymentDto) {
+   return this.paymentService.createPayment(dto);
    }
 
  //Get Payments
@@ -20,11 +21,6 @@ export class PaymentController {
    return this.paymentService.getPayments();
    }
 
-  //  //Get Pending Payments
-  // @Get('get_pending_payments')
-  // async getPendingPayments() {
-  //   return this.paymentService.getpendingPayments();
-  //   }
 
   //Get Payment By Payment Status
   @Get('get_payment_by_status/:status')

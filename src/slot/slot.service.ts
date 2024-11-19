@@ -1,7 +1,7 @@
 //slotservice.ts
 
 import { Injectable } from '@nestjs/common';
-import { SlotDto } from 'src/auth/dto';
+import { SlotDto } from './dto/slot.dto';
 import { CourtService } from 'src/court/court.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 

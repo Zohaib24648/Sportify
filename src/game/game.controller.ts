@@ -4,6 +4,8 @@ import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { Roles } from 'src/auth/guard/roles.decorator';
 import { GameService } from './game.service';
+import { GameDto } from './dto/game.dto';
+import { AddGameCourtDto } from './dto/addgamecourt.dto';
 
 
 @Controller('game')
@@ -16,7 +18,7 @@ export class GameController {
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
     @Post('create_game')
-    create_game(@Body() dto: any) {
+    create_game(@Body() dto: GameDto) {
         return this.game_service.create_game(dto);
         }
 
@@ -41,7 +43,7 @@ export class GameController {
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
     @Post('update_game/:id')
-    update_game(@Param('id') id: string, @Body() dto: any) {
+    update_game(@Param('id') id: string, @Body() dto: GameDto) {
         return this.game_service.update_game(id, dto);
     }
 
@@ -49,7 +51,7 @@ export class GameController {
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
     @Post('add_game_to_court')
-    add_court_games(@Body() dto: any) {
+    add_court_games(@Body() dto: AddGameCourtDto) {
         return this.game_service.addGameToCourt(dto);
     }
 
@@ -58,7 +60,7 @@ export class GameController {
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
     @Delete('delete_game_from_court')
-    delete_court_games(@Body() dto: any ) {
+    delete_court_games(@Body() dto: AddGameCourtDto ) {
         return this.game_service.delete_court_game(dto);
     }
 

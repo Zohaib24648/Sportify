@@ -6,6 +6,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { Roles } from 'src/auth/guard/roles.decorator';
 import { PaymentService } from 'src/payment/payment.service';
+import { CreateBookingDto } from './dto/createbooking.dto';
 
 @Controller('booking')
 export class BookingController {
@@ -14,16 +15,16 @@ export class BookingController {
   //Create Booking
   @UseGuards(AuthGuard('jwt'))
   @Post('create_booking')
-  async createBooking(@Body() booking: any) {
-    return this.bookingService.createBooking(booking);
+  async createBooking(@Body() dto: CreateBookingDto) {
+    return this.bookingService.createBooking(dto);
     }
 
   //Get Bookings
   @Roles('admin')
   @UseGuards(AuthGuard('jwt'),RolesGuard)
   @Get('get_all_bookings')
-  async getBookings(@Body() dto: any) {
-    return this.bookingService.get_all_Bookings( dto);
+  async getBookings() {
+    return this.bookingService.get_all_Bookings( );
   }
 
   //Update Booking

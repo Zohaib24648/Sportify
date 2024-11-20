@@ -42,7 +42,7 @@ export class AuthService{
                 throw new ConflictException('Email or phone number already exists');
               }
             }
-            throw new InternalServerErrorException('An unexpected error occurred');
+            throw new InternalServerErrorException('An unexpected error occurred', error.message);
           }
     }
 

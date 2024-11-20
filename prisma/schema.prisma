@@ -30,6 +30,7 @@ enum Booking_Status {
   pending
   confirmed
   cancelled
+  onHold
   completed
 }
 
@@ -112,12 +113,12 @@ model Court_Media {
 }
 
 model Court_Availability {
-  id         String   @id @default(uuid())
-  court_id   String   @unique
-  //Day_of_week Boolean[] @default([false,false,false,false,false,false,false])
-  start_time DateTime
-  end_time   DateTime
-  court      Court    @relation(fields: [court_id], references: [id])
+  id          String    @id @default(uuid())
+  court_id    String    @unique
+  Day_of_week Boolean[] @default([true, true, true, true, true, true, true])
+  start_time  DateTime
+  end_time    DateTime
+  court       Court     @relation(fields: [court_id], references: [id])
 }
 
 model Court_Close_Dates {
@@ -140,6 +141,7 @@ model Booking {
   id           String         @id @default(uuid())
   user_id      String
   slot_id      String?        @unique
+  booking_id   String         @unique
   status       Booking_Status @default(pending)
   total_amount Int
   paid_amount  Int

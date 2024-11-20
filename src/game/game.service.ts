@@ -12,9 +12,10 @@ export class GameService {
 
     async create_game(dto: GameDto){
         try {
-             await this.prisma.game_Type.create({
+             const game = await this.prisma.game_Type.create({
               data: { ...dto },
             });
+            return game;
           } 
           catch (error) {
             throw new InternalServerErrorException('Failed to create game');

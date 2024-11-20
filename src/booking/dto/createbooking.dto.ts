@@ -1,20 +1,11 @@
+import { Type } from "class-transformer";
 import { IsDate, IsNotEmpty, IsString } from "class-validator";
+import { SlotDto } from "src/slot/dto/slot.dto";
 
-export class CreateBookingDto {    
+export class CreateBookingDto extends SlotDto {    
     
     @IsNotEmpty()
     @IsString()
     user_id: string;
     
-    @IsNotEmpty()
-    @IsString()
-    court_id: string;
-    
-    @IsNotEmpty()
-    @IsDate()
-    start_time: Date;
-    
-    @IsNotEmpty()
-    @IsDate()
-    end_time: Date;
 }

@@ -137,20 +137,22 @@ async getPayments() {
         }
 
 
-        async verifyPayment(paymentId: string) {
-            if (!paymentId) {
+        async verifyPayment(body: any) {
+            const { id } = body;
+            console.log('Verifying payment:', body.id);
+            if (!body.id) {
               throw new BadRequestException('Payment ID is required');
             }
           
             try {
               return await this.prisma.$transaction(async (prisma) => {
                 // Step 1: Fetch the payment and validate its current status
-                const payment = await prisma.payment.findUnique({
-                  where: { id: paymentId },
+                const payment = await prisma.payment.findFirst({
+                  where: { id:body.id },
                 });
           
                 if (!payment) {
-                  throw new NotFoundException(`Payment with ID ${paymentId} not found`);
+                  throw new NotFoundException(`Payment with ID ${id} not found`);
                 }
           
                 if (payment.payment_status === 'paid') {
@@ -159,7 +161,7 @@ async getPayments() {
           
                 // Step 2: Update payment status to 'paid'
                 const updatedPayment = await prisma.payment.update({
-                  where: { id: paymentId },
+                  where: { id},
                   data: { payment_status: 'paid' },
                 });
           
@@ -182,7 +184,7 @@ async getPayments() {
           
                 if (!booking) {
                   throw new InternalServerErrorException(
-                    `Failed to update booking for payment ID ${paymentId}`
+                    `Failed to update booking for payment ID ${id}`
                   );
                 }
           

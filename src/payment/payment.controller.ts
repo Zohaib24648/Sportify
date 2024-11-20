@@ -47,8 +47,8 @@ export class PaymentController {
    }
 
  @Put('verify_payment')
- async verifyPayment(@Body() dto : any) {
-   console.log(dto);
-   return this.paymentService.verifyPayment(dto);
+ async verifyPayment(@Body() id : string) {
+   console.log(id);
+   return this.paymentService.verifyPayment(id);
    }
 }

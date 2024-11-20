@@ -1,4 +1,5 @@
-import { IsDateString, IsNotEmpty } from "class-validator"
+import { Type } from "class-transformer";
+import { IsDate, IsDateString, IsNotEmpty } from "class-validator"
 
 
 
@@ -8,12 +9,12 @@ export class SlotDto {
 @IsNotEmpty()
 court_id : string;
 
-@IsDateString()
-@IsNotEmpty()
+@IsDate()
+@Type(() => Date)
 start_time : Date;
 
-@IsNotEmpty()
-@IsDateString()
+@IsDate()
+@Type(() => Date)
 end_time : Date;
 
 

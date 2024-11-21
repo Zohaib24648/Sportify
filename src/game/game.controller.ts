@@ -1,4 +1,4 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Put } from '@nestjs/common';
 import { Body, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/auth/guard/roles.guard';
@@ -29,6 +29,13 @@ export class GameController {
     get_games() {
         return this.game_service.get_games();
     }
+        // // Get Game
+        // @Roles('admin')
+        // @UseGuards(AuthGuard('jwt'),RolesGuard)
+        // @Post('update_game/:id')
+        // get_game(@Param('id') id: string) {
+        //     return this.game_service.get_game(id);
+        // }
 
     // Delete Game
     @Roles('admin')
@@ -42,7 +49,7 @@ export class GameController {
     // Update Game
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
-    @Post('update_game/:id')
+    @Put('update_game/:id')
     update_game(@Param('id') id: string, @Body() dto: GameDto) {
         return this.game_service.update_game(id, dto);
     }

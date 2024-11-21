@@ -13,7 +13,6 @@ export class PaymentDto {
     payment_amount: number;
     
     @IsEnum(PAYMENT_METHOD)
-    @IsNotEmpty() 
-    payment_method: string
+    payment_method: PAYMENT_METHOD
 
 }

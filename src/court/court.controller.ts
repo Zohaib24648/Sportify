@@ -106,20 +106,4 @@ export class CourtController {
       update_court_specs(@Param('id') id:string, @Body() dto:CourtSpecDto){
           return this.court_service.update_court_spec(id,dto);
       }
-
-
-    
-
-      
-
-
-  
-    // Update Court Availability
-
-    @Roles('admin')
-    @UseGuards(AuthGuard('jwt'),RolesGuard)
-    @Post ('update_court_availability/:id')
-    update_court_availability(@Param('id') id:string, @Body() dto:CourtAvailabilityDto){
-        return this.court_service.upsert_court_availability(id,dto);
-    }
 }

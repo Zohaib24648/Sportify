@@ -1,20 +1,12 @@
-import { IsDateString, IsNotEmpty } from "class-validator"
+import { Type } from "class-transformer";
+import { IsDate, IsDateString, IsNotEmpty } from "class-validator"
+import { TimeDto } from "./time.dto";
 
 
 
 
-export class SlotDto {
+export class SlotDto  extends TimeDto{
 
 @IsNotEmpty()
 court_id : string;
-
-@IsDateString()
-@IsNotEmpty()
-start_time : Date;
-
-@IsNotEmpty()
-@IsDateString()
-end_time : Date;
-
-
 }

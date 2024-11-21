@@ -23,24 +23,33 @@ export class CourtService {
           throw new BadRequestException('Invalid hourly rate or down payment');
         }
       
-        const existingCourt = await this.prisma.court.findFirst({
-          where: { name },
-        });
-      
-        if (existingCourt) {
-          throw new ConflictException('Court with this name already exists');
+        try {
+          const existingCourt = await this.prisma.court.findFirst({
+            where: { name },
+          });
+        
+          if (existingCourt) {
+            throw new ConflictException('Court with this name already exists');
+          }
+        
+          return this.prisma.court.create({
+            data: dto,
+          });
+          
+        } catch (error) {
+          throw new InternalServerErrorException('Failed to create court',error.message);
         }
-      
-        return this.prisma.court.create({
-          data: dto,
-        });
       }
 
 
       
 
     async get_Courts(){
-        return this.prisma.court.findMany();
+      try {
+        return this.prisma.court.findMany();        
+      } catch (error) {
+        throw new InternalServerErrorException('Failed to get courts',error.message);        
+      }
     }
 
 
@@ -53,9 +62,10 @@ export class CourtService {
               court_specs: true,
               court_availability: true,
               court_media: true,
-              slots: true,
-              reviews: true,
-              game_types: true,
+              game_types: {
+                include: {
+                  game_type: true
+              }},
             },
           });
       
@@ -65,7 +75,7 @@ export class CourtService {
       
           return court;
         } catch (error) {
-          throw new InternalServerErrorException('Failed to retrieve court details');
+          throw new InternalServerErrorException('Failed to retrieve court details',error.message);
         }
       }
       
@@ -88,11 +98,12 @@ export class CourtService {
                 throw new NotFoundException(`Court with ID ${id} not found`);
               }
             }
-            throw new InternalServerErrorException('Failed to update court');
+            throw new InternalServerErrorException('Failed to update court',error.message);
           }
     }
     
     
+    //Not Correct
 
     async deleteCourt(id: string): Promise<string> {
         try {
@@ -107,7 +118,7 @@ export class CourtService {
           if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
             throw new NotFoundException(`Court with ID ${id} not found`);
           }
-          throw new InternalServerErrorException('Failed to delete court');
+          throw new InternalServerErrorException('Failed to delete court',error.message);
         }
       }
       
@@ -122,7 +133,7 @@ export class CourtService {
       
           return await this.prisma.court_Specs.findMany({ where: { court_id } });
         } catch (error) {
-          throw new InternalServerErrorException('Failed to retrieve court specifications');
+          throw new InternalServerErrorException('Failed to retrieve court specifications',error.message);
         }
       }
       
@@ -140,7 +151,7 @@ export class CourtService {
             },
           });
         } catch (error) {
-          throw new InternalServerErrorException('Failed to add court specification');
+          throw new InternalServerErrorException('Failed to add court specification',error.message);
         }
       }
 
@@ -158,7 +169,7 @@ export class CourtService {
             data: dto,
           });
         } catch (error) {
-          throw new InternalServerErrorException('Failed to update court specification');
+          throw new InternalServerErrorException('Failed to update court specification',error.message);
         }
       }
 
@@ -174,14 +185,14 @@ export class CourtService {
       
           return await this.prisma.court_Specs.delete({ where: { id } });
         } catch (error) {
-          throw new InternalServerErrorException('Failed to delete court specification');
+          throw new InternalServerErrorException('Failed to delete court specification',error.message);
         }
       }
       
             
 
 
-      async upsert_court_availability(id: string, dto: any) {
+      async upsert_court_availability(id: string, dto: CourtAvailabilityDto) {
         try {
           const court = await this.prisma.court.findUnique({ where: { id } });
           if (!court) {
@@ -194,7 +205,7 @@ export class CourtService {
             create: { court_id: id, ...dto },
           });
         } catch (error) {
-          throw new InternalServerErrorException('Failed to update court availability');
+          throw new InternalServerErrorException('Failed to update court availability',error.message);
         }
       }
     }      

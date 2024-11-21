@@ -49,7 +49,8 @@ export class AuthService{
 
 
     async signin(req: SigninDto) {
-        const { email, password } = req;
+        try {
+          const { email, password } = req;
       
         const user = await this.prisma.user.findFirst({
           where: { email },
@@ -65,11 +66,17 @@ export class AuthService{
         }
       
         return this.signToken(user.id, user.email, user.role);
+
+        } catch (error) {
+          throw new InternalServerErrorException('Failed to sign in', error.message);
+          
+        }
       }
       
 
     async signToken(userid: string, email: string, role: string): Promise<{ access_token: string }> {
-        const payload = { sub: userid, email,role };
+        try {
+          const payload = { sub: userid, email,role };
         const token = await this.jwt.signAsync(payload, {
             expiresIn: "10d",
             secret: process.env.JWT_SECRET,
@@ -77,6 +84,10 @@ export class AuthService{
         return {
             access_token: token,
         };
+        } catch (error) {
+          throw new InternalServerErrorException('Failed to sign token', error.message)
+          
+        }
     }
     
 }

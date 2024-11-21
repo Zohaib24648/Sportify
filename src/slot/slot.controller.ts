@@ -9,11 +9,11 @@ import { SlotCourtDto } from './dto/slotcourt.dto';
 export class SlotController {
     constructor (private readonly slotService: SlotService) {}
 
-    @Roles('admin')
-    @Post('get_slots')
-    getAvailableSlotsForDay(@Body() dto : any){
-        return this.slotService.getAvailableSlotsForDay(dto);
-    }
+    // @Roles('admin')
+    // @Post('get_slots')
+    // getAvailableSlotsForDay(@Body() dto : any){
+    //     return this.slotService.getAvailableSlotsForDay(dto);
+    // }
     
 
     @Roles('admin')

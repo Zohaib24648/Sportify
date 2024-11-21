@@ -21,13 +21,13 @@ export class BookingController {
     return this.bookingService.createBooking(dto);
     }
 
-  // //Get Bookings
-  // @Roles('admin')
-  // @UseGuards(AuthGuard('jwt'),RolesGuard)
-  // @Get('get_all_bookings')
-  // async getBookings() {
-  //   return this.bookingService.get_all_Bookings( );
-  // }
+  //Get Bookings
+  @Roles('admin')
+  @UseGuards(AuthGuard('jwt'),RolesGuard)
+  @Get('get_all_bookings')
+  async getBookings() {
+    return this.bookingService.get_all_Bookings( );
+  }
 
   //Update Booking
   @Put('update_booking/:id')
@@ -47,15 +47,9 @@ export class BookingController {
     return this.bookingService.getBookingDetails(id);
     }
 
-  //Get Bookings by User
-  @Get('get_bookings_by_user/:id')
-  async getBookingsByUser(@Param('id') id: string) {
-    return this.bookingService.getBookingsByUserId(id);
-    }
-
 
   @Get()
-  async getBookings(@Query() filters: BookingFiltersDto) {
+  async filterBookings(@Query() filters: BookingFiltersDto) {
     return this.bookingService.getBookingsWithFilters(filters);
   }
 }

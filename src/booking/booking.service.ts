@@ -26,13 +26,18 @@ export class BookingService {
 
 
     async createBooking(dto : CreateBookingDto) {
-        const { user_id, court_id, start_time, end_time } = dto;
+      if (!this.slotService.timevalidator(dto)) {
+        throw new BadRequestException('Invalid time slot');
+      }
+    try {
+      const { user_id, court_id, start_time, end_time } = dto;
         const slotdto : SlotDto = {court_id, start_time, end_time};
-
+      
+       return this.prisma.$transaction(async (prisma) => {
         const slot = await this.slotService.createSlot(slotdto);
         const totalAmount = await this.calculateTotalAmount(slotdto);
       
-        return await this.prisma.booking.create({
+       await this.prisma.booking.create({
           data: {
             user_id,
             slot_id: slot.id,
@@ -43,24 +48,39 @@ export class BookingService {
             Updated_at: new Date(),
           },
         });
-      }
+      });
+    } catch (error) {
+      throw new InternalServerErrorException('Error creating booking', error.message);
+    }
+      
+    }
 
       async updateBooking(dto : UpdateBookingDto) {
-        const { booking_id, start_time, end_time } = dto;
+        if (!this.slotService.timevalidator(dto)) {
+          throw new BadRequestException('Invalid time slot');
+        }
+        try {
+          const { booking_id, start_time, end_time } = dto;
         
         const booking = await this.getBookingDetails(booking_id);        
         const court_id = booking.slot.court_id;
 
         const slotdto : SlotDto  = {court_id , start_time, end_time};
         const total_amount = await this.calculateTotalAmount(slotdto);
+        this.prisma.$transaction(async (prisma) => {
+        
         await this.slotService.updateSlot(booking.slot.id, slotdto );
-      
         const updated_booking = await this.prisma.booking.update({
           where: { id: booking_id },
           data: {total_amount, Updated_at: new Date() },
         });
         
         return updated_booking;
+        })} catch (error) {
+          
+          throw new InternalServerErrorException('Error updating booking', error.message);
+          
+        }
       }
       
     
@@ -91,7 +111,11 @@ async getBookingDetails(id: string) {
     const booking = await this.prisma.booking.findUnique({
       where: { id },
       include: {
-        slot: true,
+        slot: {
+          include: {
+            court: true
+          },
+        },
         user: true,
         Payment: true,
       },
@@ -103,15 +127,7 @@ async getBookingDetails(id: string) {
 
     return booking;
   } catch (error) {
-    console.error('Error fetching booking details:', error.message);
-
-    // Handle known Prisma client errors
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      throw new InternalServerErrorException('Database error occurred while fetching booking details');
-    }
-
-    // Throw a generic error for any other issues
-    throw new InternalServerErrorException('Failed to fetch booking details');
+    throw new InternalServerErrorException('Failed to fetch booking details', error.message);
     }
 }
 
@@ -120,69 +136,58 @@ async getBookingDetails(id: string) {
       
 
     async cancelBooking(id: string) {
-        const booking = await this.prisma.booking.findUnique({
-          where: { id },
-          include: { slot: true },
-        });
-      
-        if (!booking) {
-          throw new NotFoundException('Booking not found');
-        }
-      
-        return this.prisma.$transaction(async (prisma) => {
-          const updatedBooking = await prisma.booking.update({
+        try {
+          const booking = await this.prisma.booking.findUnique({
             where: { id },
-            data: {
-              status: 'cancelled',
-              slot_id: null,
-              Updated_at: new Date(),
-            },
+            include: { slot: true },
           });
-            
-          await prisma.slot.delete({
-              where: { id: booking.slot.id },
-            });
-      
-          const payments = await prisma.payment.findMany({
-            where: { booking_id: id },
-          });
-      
-          for (const payment of payments) {
-            const statusUpdate = payment.payment_status === 'paid'
-              ? 'refund_pending'
-              : 'refunded';
-      
-            await prisma.payment.update({
-              where: { id: payment.id },
-              data: { payment_status: statusUpdate },
-            });
+        
+          if (!booking) {
+            throw new NotFoundException('Booking not found');
           }
-      
-          return updatedBooking;
-        });
+        
+          return this.prisma.$transaction(async (prisma) => {
+            const updatedBooking = await prisma.booking.update({
+              where: { id },
+              data: {
+                status: 'cancelled',
+                slot_id: null,
+                Updated_at: new Date(),
+              },
+            });
+              
+            await prisma.slot.delete({
+                where: { id: booking.slot.id },
+              });
+        
+            const payments = await prisma.payment.findMany({
+              where: { booking_id: id },
+            });
+        
+            for (const payment of payments) {
+              const statusUpdate = payment.payment_status === 'paid'
+                ? 'refund_pending'
+                : 'refunded';
+        
+              await prisma.payment.update({
+                where: { id: payment.id },
+                data: { payment_status: statusUpdate },
+              });
+            }
+        
+            return updatedBooking;
+          });
+        } catch (error) {
+          
+          throw new InternalServerErrorException('Failed to cancel booking', error.message);
+        }
       }
-      
-    
-    
-    
-    async getBookingsByUserId(user_id: string) {
-        const bookings = await this.prisma.booking.findMany({
-            where: {
-                user_id,
-            },
-            include: {
-                slot: true,
-                Payment: true
-            },
-        });
-    
-        return bookings;
-    }
 
 
 
     async getBookingsWithFilters(filters: BookingFiltersDto) {
-        const { start_time, end_time, status, gameTypes, courtTypes, searchTerm } = filters;
+        try {
+          const { start_time, end_time, status, gameTypes, courtTypes, searchTerm } = filters;
       
         const where: Prisma.BookingWhereInput = {};
       
@@ -230,25 +235,6 @@ async getBookingDetails(id: string) {
           } as Prisma.CourtWhereInput;
         }
       
-        // Search functionality within bookings
-        if (searchTerm) {
-          where.OR = [
-            { id: { contains: searchTerm, mode: 'insensitive' } },
-            {
-              user: {
-                name: { contains: searchTerm, mode: 'insensitive' },
-              },
-            },
-            {
-              slot: {
-                court: {
-                  name: { contains: searchTerm, mode: 'insensitive' },
-                },
-              },
-            },
-          ];
-        }
-      
         console.log('Where clause:', where);
       
         // Execute query
@@ -273,43 +259,40 @@ async getBookingDetails(id: string) {
             Payment: true,
           },
         });
+
+        } catch (error) {
+          throw new BadRequestException('Failed to fetch bookings', error.message);
+        }
       }
       
 
 async searchBookings(searchTerm: string) {
-    const bookings = await this.prisma.booking.findMany({
-      where: {
-        OR: [
-          { id: { contains: searchTerm, mode: 'insensitive' } },
-          {
-            user: {
-              name: { contains: searchTerm, mode: 'insensitive' },
-            },
+try {
+  const bookings = await this.prisma.booking.findMany({
+    where: {
+      OR: [
+        { id: { contains: searchTerm, mode: 'insensitive' } },
+        {
+          user: {
+            name: { contains: searchTerm, mode: 'insensitive' },
           },
-          {
-            slot: {
-              court: {
-                name: { contains: searchTerm, mode: 'insensitive' },
-              },
-            },
-          },
-        ],
-      },
-      include: {
-        slot: {
-          include: {
-            court: true,
-          },
+        }
+      ],
+    },
+    include: {
+      slot: {
+        include: {
+          court: true,
         },
-        user: true,
-        Payment: true,
       },
-    });
-
-    if (bookings.length === 0) {
-        throw new NotFoundException('No bookings found matching the criteria');
-      }
-  
-    return bookings;
-  }
+      user: true,
+      Payment: true,
+    },
+  });
+  return bookings;
+} catch (error) {
+throw new BadRequestException('Failed to search bookings', error.message);  
 }
+}
+  
+  }

@@ -16,7 +16,7 @@ export class CourtAvailabilityDto{
     @IsBoolean({each : true})
     @ArrayMaxSize(7)
     @ArrayMinSize(7)
-    Day_of_week : Boolean[]
+    Day_of_week : boolean[]
 
     //  Day_of_week Boolean[] @default([true, true, true, true, true, true, true])
 }

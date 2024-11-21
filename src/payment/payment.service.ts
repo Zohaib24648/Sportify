@@ -5,68 +5,69 @@ import { CourtService } from 'src/court/court.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PaymentDto } from './dto/payment.dto';
 import { PImageDto } from './dto/p_image.dto';
+import { BookingService } from 'src/booking/booking.service';
+import { PaymentHandlerDto } from './dto/paymenthandler.dto';
 
 @Injectable()
 export class PaymentService {
 
-    constructor(private readonly prisma: PrismaService, private readonly courtService: CourtService ) {}
+    constructor(private readonly prisma: PrismaService, private readonly courtService: CourtService , private readonly bookingService:BookingService) {}
 
     
-async createPayment(dto: PaymentDto) {
-    const { booking_id, payment_amount, payment_method } = dto;
-  try {
-    // Fetch booking details with slot and court information
-    const bookingDetails = await this.prisma.booking.findFirst({
-      where: {
-        id: booking_id,
-        slot_id: { not: null },
-      },
-      include: {
-        slot: {
-          include: { court: true },
-        },
-      },
-    });
-
-    if (!bookingDetails) {
-      throw new NotFoundException('Booking not found');
-    }
-
-    const { total_amount, paid_amount, slot } = bookingDetails;
-    const { min_down_payment } = slot.court;
-
-    // Check for pending payments
-    const pendingPayments = await this.prisma.payment.findFirst({
-      where: {
-        booking_id,
-        payment_status: 'not_paid',
-      },
-    });
-
-    if (pendingPayments) {
-      throw new ConflictException('A payment is already pending for this booking');
-    }
-
-    // Calculate remaining and threshold amounts
+async paymentHandler (dto: PaymentHandlerDto): Promise<boolean> {
+    const {total_amount,paid_amount,min_down_payment,payment_amount}  = dto;
+      // Calculate remaining and threshold amounts
     const remainingAmount = total_amount - paid_amount;
     const thresholdAmount = (min_down_payment * total_amount) / 100;
+    console.log('Remaining amount:', remainingAmount);
+    console.log('Threshold amount:', thresholdAmount);
 
     if (paid_amount >= total_amount) {
-      throw new BadRequestException('Payment already completed');
+      console.error('Payment is already completed for this booking');
+      return false;
     }
 
     if (remainingAmount === total_amount && payment_amount < thresholdAmount) {
-      throw new BadRequestException(
+      console.error(
         `First payment must meet the minimum threshold: ${thresholdAmount}`
       );
+      return false;
     }
 
     if (payment_amount > remainingAmount) {
-      throw new BadRequestException(
+      console.error(
         `Payment exceeds the remaining amount: ${remainingAmount}`
       );
-    }
+      return false;
 
+    }
+    return true;
+  }
+
+
+
+async createPayment(dto: PaymentDto) {
+    const { booking_id, payment_amount, payment_method } = dto;
+  try {
+    const bookingDetails = await this.bookingService.getBookingDetails(booking_id);
+
+    const { total_amount, paid_amount } = bookingDetails;
+    const { min_down_payment } = bookingDetails.slot.court;
+
+    const pendingPayments = bookingDetails.Payment.find(
+      (payment) => (payment.payment_status === 'verification_pending' || payment.payment_status === 'not_paid')
+  );
+
+  if (pendingPayments) {
+      throw new ConflictException('A payment is already pending for this booking');
+  }
+
+    const paymentHandlerDto = {total_amount,paid_amount,min_down_payment,payment_amount};
+    const isValid = await this.paymentHandler(paymentHandlerDto);
+    if(isValid === false){
+      throw new BadRequestException('Something Wrong with the Payment Amount');
+    }
+  
     // Create the payment record
     return await this.prisma.payment.create({
       data: {
@@ -81,8 +82,45 @@ async createPayment(dto: PaymentDto) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       throw new InternalServerErrorException('Database error occurred while creating payment');
     }
-    throw error;
+    throw new InternalServerErrorException('Failed to create payment', error.message);
   }
+}
+
+async updatePayment(id: string, dto: PaymentDto) {
+  const { payment_amount, payment_method, booking_id } = dto;
+  // const payment = this.prisma.payment.update({ where: { id }, data: { payment_amount, payment_method } });
+
+  try {
+    const payment = await this.getPaymentById(id);
+    if (payment.payment_status === 'paid') {
+      throw new ConflictException('Paid Payment cannot be updated');
+    }
+    const bookingDetails = await this.bookingService.getBookingDetails(booking_id);
+
+    const { total_amount, paid_amount } = bookingDetails;
+    const { min_down_payment } = bookingDetails.slot.court;
+
+    const paymentHandlerDto = {total_amount,paid_amount,min_down_payment,payment_amount};
+        
+    if(!this.paymentHandler(paymentHandlerDto)){
+      throw new ConflictException('Something Wrong with the Payment Amount');
+    }
+
+    // Update the payment record
+    return await this.prisma.payment.update({
+      where: { id },
+      data: {
+        payment_amount,
+        payment_method: payment_method as PAYMENT_METHOD,
+      },
+    });
+
+
+  } catch (error) {
+    
+    throw new InternalServerErrorException('Failed to update payment', error.message);
+  }
+  
 }
     
 
@@ -90,7 +128,7 @@ async getPayments() {
     try {
       return await this.prisma.payment.findMany();
     } catch (error) {
-      throw new InternalServerErrorException('Failed to fetch payments');
+      throw new InternalServerErrorException('Failed to fetch payments',error.message);
     }
   }
   
@@ -107,7 +145,12 @@ async getPayments() {
 
 
         getPaymentById(id: string) {
-        const payment = this.prisma.payment.findUnique({ where: { id } });
+            try {
+              return this.prisma.payment.findFirst({ where: { id } });
+            } catch (error) {
+              
+              throw new InternalServerErrorException('Failed to fetch payment by id', error.message);
+            }
         }
 
 
@@ -131,29 +174,19 @@ async getPayments() {
         
 
 
-    updatePayment(id: any, dto: any) {
-        const { payment_amount, payment_method } = dto;
-        const payment = this.prisma.payment.update({ where: { id }, data: { payment_amount, payment_method } });
-        }
 
 
-        async verifyPayment(body: any) {
-            const { id } = body;
-            console.log('Verifying payment:', body.id);
-            if (!body.id) {
+
+        async verifyPayment(id : string) {
+            console.log('Verifying payment:', id);
+            if (!id) {
               throw new BadRequestException('Payment ID is required');
             }
           
             try {
               return await this.prisma.$transaction(async (prisma) => {
                 // Step 1: Fetch the payment and validate its current status
-                const payment = await prisma.payment.findFirst({
-                  where: { id:body.id },
-                });
-          
-                if (!payment) {
-                  throw new NotFoundException(`Payment with ID ${id} not found`);
-                }
+                const payment = await this.getPaymentById(id);
           
                 if (payment.payment_status === 'paid') {
                   throw new ConflictException('This payment has already been verified');
@@ -224,9 +257,7 @@ async getPayments() {
                   'A database error occurred while verifying payment'
                 );
               }
-          
-              console.error('Error verifying payment:', error.message);
-              throw new InternalServerErrorException('Failed to verify payment');
+                        throw new InternalServerErrorException('Failed to verify payment', error.message);
             }}
     
     

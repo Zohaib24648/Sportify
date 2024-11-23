@@ -6,7 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from 'src/auth/guard/roles.decorator';
 import { RolesGuard } from 'src/auth/guard/roles.guard';
-import { Role } from '@prisma/client';
+import { ROLE } from '@prisma/client';
 import { CourtSpecDto } from 'src/court/dto/court_spec.dto';
 import { CourtAvailabilityDto } from './dto/courtavailability.dto';
 

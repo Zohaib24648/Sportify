@@ -13,20 +13,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
+enum ROLE {
   admin
   moderator
   user
   ground_owner
 }
 
-enum Review_Status {
+enum REVIEW_STATUS {
   pending
   approved
   rejected
 }
 
-enum Booking_Status {
+enum BOOKING_STATUS {
   pending
   confirmed
   cancelled
@@ -34,7 +34,7 @@ enum Booking_Status {
   completed
 }
 
-enum Payment_Status {
+enum PAYMENT_STATUS {
   not_paid
   paid
   refunded
@@ -49,22 +49,23 @@ enum PAYMENT_METHOD {
 }
 
 model User {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
+  user_id       Int       @default(autoincrement())
   name          String
-  email         String   @unique
-  password_hash String?
-  user_pfp_link String   @default("https://www.shutterstock.com/shutterstock/photos/1677509740/display_1500/stock-vector-default-avatar-profile-icon-social-media-user-vector-1677509740.jpg")
-  user_phone    String   @unique
-  role          Role     @default(user)
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-
-  bookings Booking[]
-  reviews  Review[]
+  email         String    @unique
+  password_hash String
+  user_pfp_link String    @default("https://www.shutterstock.com/shutterstock/photos/1677509740/display_1500/stock-vector-default-avatar-profile-icon-social-media-user-vector-1677509740.jpg")
+  user_phone    String    @unique
+  role          ROLE      @default(user)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  bookings      Booking[]
+  reviews       Review[]
 }
 
 model Court {
   id                 String              @id @default(uuid())
+  court_id           Int                 @default(autoincrement())
   name               String
   description        String?
   court_location     String
@@ -139,9 +140,10 @@ model Slot {
 
 model Booking {
   id           String         @id @default(uuid())
+  booking_id   Int            @default(autoincrement())
   user_id      String
   slot_id      String?        @unique
-  status       Booking_Status @default(pending)
+  status       BOOKING_STATUS @default(pending)
   total_amount Int
   paid_amount  Int
   Created_at   DateTime       @default(now())
@@ -153,8 +155,9 @@ model Booking {
 
 model Payment {
   id                 String         @id @default(uuid())
+  payment_id         Int            @default(autoincrement())
   booking_id         String
-  payment_status     Payment_Status @default(not_paid)
+  payment_status     PAYMENT_STATUS @default(not_paid)
   payment_amount     Int
   payment_method     PAYMENT_METHOD @default(ONLINE)
   payment_time       DateTime       @default(now())
@@ -170,7 +173,7 @@ model Review {
   review_text String
   Created_at  DateTime      @default(now())
   Updated_at  DateTime      @updatedAt
-  Published   Review_Status @default(pending)
+  Published   REVIEW_STATUS @default(pending)
   user        User          @relation(fields: [user_id], references: [id])
   court       Court         @relation(fields: [court_id], references: [id])
 

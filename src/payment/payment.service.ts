@@ -1,6 +1,6 @@
 //paymernt service
 import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import { PAYMENT_METHOD, Payment_Status, Prisma } from '@prisma/client';
+import { PAYMENT_METHOD, PAYMENT_STATUS, Prisma } from '@prisma/client';
 import { CourtService } from 'src/court/court.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PaymentDto } from './dto/payment.dto';
@@ -139,7 +139,7 @@ async getPayments() {
     }
 
     getPaymetByStatus(status: string) {
-        const payments = this.prisma.payment.findMany({ where: { payment_status: status as Payment_Status } });
+        const payments = this.prisma.payment.findMany({ where: { payment_status: status as PAYMENT_STATUS } });
         return payments;
     }
 

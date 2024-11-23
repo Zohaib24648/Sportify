@@ -1,14 +1,14 @@
 -- CreateEnum
-CREATE TYPE "Role" AS ENUM ('admin', 'moderator', 'customer', 'user');
+CREATE TYPE "ROLE" AS ENUM ('admin', 'moderator', 'user', 'ground_owner');
 
 -- CreateEnum
-CREATE TYPE "Review_Status" AS ENUM ('pending', 'approved', 'rejected');
+CREATE TYPE "REVIEW_STATUS" AS ENUM ('pending', 'approved', 'rejected');
 
 -- CreateEnum
-CREATE TYPE "Booking_Status" AS ENUM ('pending', 'confirmed', 'cancelled', 'completed');
+CREATE TYPE "BOOKING_STATUS" AS ENUM ('pending', 'confirmed', 'cancelled', 'on_hold', 'completed');
 
 -- CreateEnum
-CREATE TYPE "Payment_Status" AS ENUM ('not_paid', 'paid', 'refunded', 'refund_pending', 'verification_pending');
+CREATE TYPE "PAYMENT_STATUS" AS ENUM ('not_paid', 'paid', 'refunded', 'refund_pending', 'verification_pending');
 
 -- CreateEnum
 CREATE TYPE "PAYMENT_METHOD" AS ENUM ('CASH', 'CARD', 'ONLINE');
@@ -16,12 +16,13 @@ CREATE TYPE "PAYMENT_METHOD" AS ENUM ('CASH', 'CARD', 'ONLINE');
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
+    "user_id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "password_hash" TEXT,
+    "password_hash" TEXT NOT NULL,
     "user_pfp_link" TEXT NOT NULL DEFAULT 'https://www.shutterstock.com/shutterstock/photos/1677509740/display_1500/stock-vector-default-avatar-profile-icon-social-media-user-vector-1677509740.jpg',
     "user_phone" TEXT NOT NULL,
-    "role" "Role" NOT NULL DEFAULT 'customer',
+    "role" "ROLE" NOT NULL DEFAULT 'user',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -31,11 +32,12 @@ CREATE TABLE "User" (
 -- CreateTable
 CREATE TABLE "Court" (
     "id" TEXT NOT NULL,
+    "court_id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
-    "description" TEXT NOT NULL,
+    "description" TEXT,
     "court_location" TEXT NOT NULL,
-    "hourly_rate" DECIMAL(65,30) NOT NULL,
-    "min_down_payment" DECIMAL(65,30) NOT NULL,
+    "hourly_rate" INTEGER NOT NULL,
+    "min_down_payment" INTEGER NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -82,6 +84,7 @@ CREATE TABLE "Court_Media" (
 CREATE TABLE "Court_Availability" (
     "id" TEXT NOT NULL,
     "court_id" TEXT NOT NULL,
+    "Day_of_week" BOOLEAN[] DEFAULT ARRAY[true, true, true, true, true, true, true]::BOOLEAN[],
     "start_time" TIMESTAMP(3) NOT NULL,
     "end_time" TIMESTAMP(3) NOT NULL,
 
@@ -111,9 +114,10 @@ CREATE TABLE "Slot" (
 -- CreateTable
 CREATE TABLE "Booking" (
     "id" TEXT NOT NULL,
+    "booking_id" SERIAL NOT NULL,
     "user_id" TEXT NOT NULL,
-    "slot_id" TEXT NOT NULL,
-    "status" "Booking_Status" NOT NULL DEFAULT 'pending',
+    "slot_id" TEXT,
+    "status" "BOOKING_STATUS" NOT NULL DEFAULT 'pending',
     "total_amount" INTEGER NOT NULL,
     "paid_amount" INTEGER NOT NULL,
     "Created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -125,8 +129,9 @@ CREATE TABLE "Booking" (
 -- CreateTable
 CREATE TABLE "Payment" (
     "id" TEXT NOT NULL,
+    "payment_id" SERIAL NOT NULL,
     "booking_id" TEXT NOT NULL,
-    "payment_status" "Payment_Status" NOT NULL DEFAULT 'not_paid',
+    "payment_status" "PAYMENT_STATUS" NOT NULL DEFAULT 'not_paid',
     "payment_amount" INTEGER NOT NULL,
     "payment_method" "PAYMENT_METHOD" NOT NULL DEFAULT 'ONLINE',
     "payment_time" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -144,7 +149,7 @@ CREATE TABLE "Review" (
     "review_text" TEXT NOT NULL,
     "Created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "Updated_at" TIMESTAMP(3) NOT NULL,
-    "Published" "Review_Status" NOT NULL DEFAULT 'pending',
+    "Published" "REVIEW_STATUS" NOT NULL DEFAULT 'pending',
 
     CONSTRAINT "Review_pkey" PRIMARY KEY ("id")
 );
@@ -192,7 +197,7 @@ ALTER TABLE "Slot" ADD CONSTRAINT "Slot_court_id_fkey" FOREIGN KEY ("court_id") 
 ALTER TABLE "Booking" ADD CONSTRAINT "Booking_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Booking" ADD CONSTRAINT "Booking_slot_id_fkey" FOREIGN KEY ("slot_id") REFERENCES "Slot"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Booking" ADD CONSTRAINT "Booking_slot_id_fkey" FOREIGN KEY ("slot_id") REFERENCES "Slot"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Payment" ADD CONSTRAINT "Payment_booking_id_fkey" FOREIGN KEY ("booking_id") REFERENCES "Booking"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

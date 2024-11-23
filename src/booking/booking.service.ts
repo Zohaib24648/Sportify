@@ -1,7 +1,7 @@
 //booking.service.ts
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Booking_Status, PAYMENT_METHOD, Payment_Status, Prisma } from '@prisma/client';
+import { BOOKING_STATUS, PAYMENT_METHOD, PAYMENT_STATUS, Prisma } from '@prisma/client';
 import { SlotService } from 'src/slot/slot.service';
 import { CourtService } from 'src/court/court.service';
 import { CreateBookingDto } from './dto/createbooking.dto';
@@ -193,7 +193,7 @@ async getBookingDetails(id: string) {
       
         // Filter by booking status
         if (status) {
-          where.status = status as Booking_Status;
+          where.status = status as BOOKING_STATUS;
         }
       
         // Filter by date range

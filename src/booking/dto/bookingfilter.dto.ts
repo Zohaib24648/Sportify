@@ -1,4 +1,4 @@
-import { Booking_Status } from "@prisma/client";
+import { BOOKING_STATUS } from "@prisma/client";
 import { Type } from "class-transformer";
 import {
     IsArray,
@@ -20,8 +20,8 @@ export class BookingFiltersDto {
     end_time?: Date;
 
     @IsOptional()
-    @IsEnum(Booking_Status) // Validate against the Booking_Status enum
-    status?: Booking_Status;
+    @IsEnum(BOOKING_STATUS) // Validate against the Booking_Status enum
+    status?: BOOKING_STATUS;
 
     @IsOptional()
     @IsString() // Single string instead of an array

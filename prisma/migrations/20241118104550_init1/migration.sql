@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE "Booking" ALTER COLUMN "total_amount" SET DATA TYPE DECIMAL(65,30),
-ALTER COLUMN "paid_amount" SET DATA TYPE DECIMAL(65,30);

@@ -1,5 +1,5 @@
 import { IsEnum, IsNotEmpty, IsNumber, IsString } from "class-validator"
-import { PAYMENT_METHOD, Payment_Status } from '@prisma/client';
+import { PAYMENT_METHOD, PAYMENT_STATUS } from '@prisma/client';
 
 
 export class PaymentDto {

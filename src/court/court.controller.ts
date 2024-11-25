@@ -44,12 +44,28 @@ export class CourtController {
         return this.court_service.updateCourt(id,dto);
     }
 
+    //create Court Availability
+    @Roles('admin')
+    @UseGuards(AuthGuard('jwt'),RolesGuard)
+    @Post('create_court_availability/:id')
+    createCourtAvailability(@Param('id')id :string, @Body() dto:CourtAvailabilityDto){
+        return this.court_service.createCourtAvailability(id, dto);
+    }
+    //get Court Availability
+    @Roles('admin')
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    @Get('get_court_availability/:id')
+    get_court_availability(@Param('id') id: string) {
+        return this.court_service.get_court_availability(id);
+    }
+    
+
     //Update Court Availability
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
-    @Put('upsert_court_availability/:id')
-    uCourpserttAvailability(@Param('id') id:string, @Body() dto:CourtAvailabilityDto){
-        return this.court_service.upsert_court_availability(id,dto);
+    @Put('update_court_availability/:id')
+    updateCourtAvailability(@Param('id') id:string, @Body() dto:CourtAvailabilityDto){
+        return this.court_service.updateCourtAvailability(id,dto);
     }
 
 
@@ -106,4 +122,5 @@ export class CourtController {
       update_court_specs(@Param('id') id:string, @Body() dto:CourtSpecDto){
           return this.court_service.update_court_spec(id,dto);
       }
+
 }

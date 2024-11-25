@@ -29,13 +29,6 @@ export class GameController {
     get_games() {
         return this.game_service.get_games();
     }
-        // // Get Game
-        // @Roles('admin')
-        // @UseGuards(AuthGuard('jwt'),RolesGuard)
-        // @Post('update_game/:id')
-        // get_game(@Param('id') id: string) {
-        //     return this.game_service.get_game(id);
-        // }
 
     // Delete Game
     @Roles('admin')

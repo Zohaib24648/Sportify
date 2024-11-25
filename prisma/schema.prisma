@@ -20,6 +20,16 @@ enum ROLE {
   ground_owner
 }
 
+enum DAY {
+  monday
+  tuesday
+  wednesday
+  thursday
+  friday
+  saturday
+  sunday
+}
+
 enum REVIEW_STATUS {
   pending
   approved
@@ -61,24 +71,28 @@ model User {
   updated_at    DateTime  @updatedAt
   bookings      Booking[]
   reviews       Review[]
+
+  @@index([email])
+  @@index([user_phone])
 }
 
 model Court {
-  id                 String              @id @default(uuid())
-  court_id           Int                 @default(autoincrement())
+  id                 String               @id @default(uuid())
+  court_id           Int                  @default(autoincrement())
   name               String
   description        String?
   court_location     String
   hourly_rate        Int
   min_down_payment   Int
-  created_at         DateTime            @default(now())
-  updated_at         DateTime            @updatedAt
+  created_at         DateTime             @default(now())
+  updated_at         DateTime             @updatedAt
   court_specs        Court_Specs[]
-  court_availability Court_Availability?
+  court_availability Court_Availability[]
   court_media        Court_Media[]
   slots              Slot[]
   reviews            Review[]
   game_types         Court_Game_Type[]
+  close_dates        Court_Close_Dates[]
 }
 
 //implement Media uploading
@@ -114,28 +128,34 @@ model Court_Media {
 }
 
 model Court_Availability {
-  id          String    @id @default(uuid())
-  court_id    String    @unique
-  Day_of_week Boolean[] @default([true, true, true, true, true, true, true])
-  start_time  DateTime
-  end_time    DateTime
-  court       Court     @relation(fields: [court_id], references: [id])
+  id         String @id @default(uuid())
+  court_id   String
+  day        DAY
+  start_time String
+  end_time   String
+  court      Court  @relation(fields: [court_id], references: [id])
 }
 
 model Court_Close_Dates {
-  id         String   @id @default(uuid())
+  id         String @id @default(uuid())
   court_id   String
-  start_date DateTime
-  end_date   DateTime
+  start_time String
+  end_time   String
+
+  court Court @relation(fields: [court_id], references: [id])
 }
 
 model Slot {
   id         String   @id @default(uuid())
   court_id   String
-  start_time DateTime
-  end_time   DateTime
+  start_time String
+  end_time   String
   court      Court    @relation(fields: [court_id], references: [id])
-  Booking    Booking?
+  booking    Booking?
+
+  @@unique([court_id, start_time, end_time])
+  @@index([start_time])
+  @@index([end_time])
 }
 
 model Booking {
@@ -146,11 +166,11 @@ model Booking {
   status       BOOKING_STATUS @default(pending)
   total_amount Int
   paid_amount  Int
-  Created_at   DateTime       @default(now())
-  Updated_at   DateTime       @updatedAt
+  created_at   DateTime       @default(now())
+  updated_at   DateTime       @updatedAt
   user         User           @relation(fields: [user_id], references: [id])
   slot         Slot?          @relation(fields: [slot_id], references: [id])
-  Payment      Payment[]
+  payment      Payment[]
 }
 
 model Payment {
@@ -171,9 +191,9 @@ model Review {
   court_id    String
   rating      Int
   review_text String
-  Created_at  DateTime      @default(now())
-  Updated_at  DateTime      @updatedAt
-  Published   REVIEW_STATUS @default(pending)
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+  published   REVIEW_STATUS @default(pending)
   user        User          @relation(fields: [user_id], references: [id])
   court       Court         @relation(fields: [court_id], references: [id])
 

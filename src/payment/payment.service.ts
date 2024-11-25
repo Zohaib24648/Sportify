@@ -19,8 +19,6 @@ async paymentHandler (dto: PaymentHandlerDto): Promise<boolean> {
       // Calculate remaining and threshold amounts
     const remainingAmount = total_amount - paid_amount;
     const thresholdAmount = (min_down_payment * total_amount) / 100;
-    console.log('Remaining amount:', remainingAmount);
-    console.log('Threshold amount:', thresholdAmount);
 
     if (paid_amount >= total_amount) {
       console.error('Payment is already completed for this booking');
@@ -54,7 +52,7 @@ async createPayment(dto: PaymentDto) {
     const { total_amount, paid_amount } = bookingDetails;
     const { min_down_payment } = bookingDetails.slot.court;
 
-    const pendingPayments = bookingDetails.Payment.find(
+    const pendingPayments = bookingDetails.payment.find(
       (payment) => (payment.payment_status === 'verification_pending' || payment.payment_status === 'not_paid')
   );
 
@@ -186,7 +184,11 @@ async getPayments() {
             try {
               return await this.prisma.$transaction(async (prisma) => {
                 // Step 1: Fetch the payment and validate its current status
+                //verify if the paymne exists
                 const payment = await this.getPaymentById(id);
+                if (!payment) {
+                  throw new NotFoundException(`Payment with ID ${id} not found`);
+                }
           
                 if (payment.payment_status === 'paid') {
                   throw new ConflictException('This payment has already been verified');

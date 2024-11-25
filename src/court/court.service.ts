@@ -1,7 +1,7 @@
 //court/court.service.ts
 
 import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { DAY, Prisma } from '@prisma/client';
 import { CourtDto } from 'src/court/dto/court.dto';
 import { CourtSpecDto } from 'src/court/dto/court_spec.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -15,13 +15,19 @@ export class CourtService {
 
 
     
+    // Centralized validation method
+    private async validateCourtData(dto: CourtDto): Promise<void> {
+      const {hourly_rate, min_down_payment } = dto;
+
+      if (hourly_rate <= 0 || min_down_payment < 0) {
+          throw new BadRequestException('Invalid hourly rate or down payment');
+      }
+  }
     
     async createCourt(dto: CourtDto) {
-        const { name, hourly_rate, min_down_payment } = dto;
+        const { name} = dto;
       
-        if (hourly_rate <= 0 || min_down_payment < 0) {
-          throw new BadRequestException('Invalid hourly rate or down payment');
-        }
+        this.validateCourtData(dto);
       
         try {
           const existingCourt = await this.prisma.court.findFirst({
@@ -81,6 +87,7 @@ export class CourtService {
       
 
     async updateCourt(id: string, dto: CourtDto) {
+      this.validateCourtData(dto);
         try {
             const updatedCourt = await this.prisma.court.update({
                 where: {
@@ -192,22 +199,112 @@ export class CourtService {
             
 
 
-      async upsert_court_availability(id: string, dto: CourtAvailabilityDto) {
+      async updateCourtAvailability(id: string, dto: CourtAvailabilityDto) {
+        const { day, start_time, end_time } = dto;
+      
+        // Validate day, start_time, and end_time
+        if (!Object.values(DAY).includes(day)) {
+          throw new BadRequestException(`Invalid day: ${day}`);
+        }
+
+        if (start_time >= end_time) {
+          throw new BadRequestException('Start time must be before end time');
+        }
+      
         try {
-          const court = await this.prisma.court.findUnique({ where: { id } });
-          if (!court) {
-            throw new NotFoundException(`Court with ID ${id} not found`);
+          const availability = await this.prisma.court_Availability.findUnique({ where: { id } });
+          if (!availability) {
+            throw new NotFoundException(`Availability with ID ${id} not found`);
+          }
+          const { court_id } = availability;
+          // Check for overlapping availabilities on the same day, excluding the current availability
+          const overlappingAvailabilities = await this.prisma.court_Availability.findMany({
+            where: {
+              court_id,
+              day,
+              id: { not: id }, // Exclude the current availability
+              OR: [
+                {
+                  start_time: { lt: end_time },
+                  end_time: { gt: start_time },
+                },
+              ],
+            },
+          });
+      
+          if (overlappingAvailabilities.length > 0) {
+            throw new ConflictException('Updated availability overlaps with an existing availability');
           }
       
-          return await this.prisma.court_Availability.upsert({
-            where: { court_id: id },
-            update: dto,
-            create: { court_id: id, ...dto },
+          // Update availability if no overlap
+          return await this.prisma.court_Availability.update({
+            where: { id },
+            data: { court_id, day, start_time, end_time },
           });
         } catch (error) {
-          throw new InternalServerErrorException('Failed to update court availability',error.message);
+          throw new InternalServerErrorException('Failed to update court availability', error.message);
         }
       }
+      
+      
+      async get_court_availability(court_id: string) {
+        try {
+            return await this.prisma.court_Availability.findMany({
+                where: { court_id },
+            });
+        } catch (error) {
+            throw new InternalServerErrorException('Failed to retrieve court availability', error.message);
+        }
+    }
+    
+
+    async createCourtAvailability(court_id: string, dto: CourtAvailabilityDto) {
+      const { day, start_time, end_time } = dto;
+    
+      // Validate day, start_time, and end_time
+      if (!Object.values(DAY).includes(day)) {
+        throw new BadRequestException(`Invalid day: ${day}`);
+      }
+
+    
+      if (start_time >= end_time) {
+        throw new BadRequestException('Start time must be before end time');
+      }
+    
+      try {
+        // Check for overlapping availabilities on the same day
+        const overlappingAvailabilities = await this.prisma.court_Availability.findMany({
+          where: {
+            court_id,
+            day,
+            OR: [
+              {
+                start_time: { lt: end_time },
+                end_time: { gt: start_time },
+              },
+            ],
+          },
+        });
+    
+        if (overlappingAvailabilities.length > 0) {
+          throw new ConflictException('New availability overlaps with an existing availability');
+        }
+    
+        // Create new availability if no overlap
+        return await this.prisma.court_Availability.create({
+          data: {
+            court_id,
+            day,
+            start_time,
+            end_time,
+          },
+        });
+      } catch (error) {
+        throw new InternalServerErrorException('Failed to create court availability', error.message);
+      }
+    }
+    
+
     }      
 
             

@@ -2,6 +2,9 @@
 CREATE TYPE "ROLE" AS ENUM ('admin', 'moderator', 'user', 'ground_owner');
 
 -- CreateEnum
+CREATE TYPE "DAY" AS ENUM ('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday');
+
+-- CreateEnum
 CREATE TYPE "REVIEW_STATUS" AS ENUM ('pending', 'approved', 'rejected');
 
 -- CreateEnum
@@ -84,9 +87,9 @@ CREATE TABLE "Court_Media" (
 CREATE TABLE "Court_Availability" (
     "id" TEXT NOT NULL,
     "court_id" TEXT NOT NULL,
-    "Day_of_week" BOOLEAN[] DEFAULT ARRAY[true, true, true, true, true, true, true]::BOOLEAN[],
-    "start_time" TIMESTAMP(3) NOT NULL,
-    "end_time" TIMESTAMP(3) NOT NULL,
+    "day" "DAY" NOT NULL,
+    "start_time" TEXT NOT NULL,
+    "end_time" TEXT NOT NULL,
 
     CONSTRAINT "Court_Availability_pkey" PRIMARY KEY ("id")
 );
@@ -95,8 +98,8 @@ CREATE TABLE "Court_Availability" (
 CREATE TABLE "Court_Close_Dates" (
     "id" TEXT NOT NULL,
     "court_id" TEXT NOT NULL,
-    "start_date" TIMESTAMP(3) NOT NULL,
-    "end_date" TIMESTAMP(3) NOT NULL,
+    "start_time" TEXT NOT NULL,
+    "end_time" TEXT NOT NULL,
 
     CONSTRAINT "Court_Close_Dates_pkey" PRIMARY KEY ("id")
 );
@@ -105,8 +108,8 @@ CREATE TABLE "Court_Close_Dates" (
 CREATE TABLE "Slot" (
     "id" TEXT NOT NULL,
     "court_id" TEXT NOT NULL,
-    "start_time" TIMESTAMP(3) NOT NULL,
-    "end_time" TIMESTAMP(3) NOT NULL,
+    "start_time" TEXT NOT NULL,
+    "end_time" TEXT NOT NULL,
 
     CONSTRAINT "Slot_pkey" PRIMARY KEY ("id")
 );
@@ -120,8 +123,8 @@ CREATE TABLE "Booking" (
     "status" "BOOKING_STATUS" NOT NULL DEFAULT 'pending',
     "total_amount" INTEGER NOT NULL,
     "paid_amount" INTEGER NOT NULL,
-    "Created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "Updated_at" TIMESTAMP(3) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Booking_pkey" PRIMARY KEY ("id")
 );
@@ -147,9 +150,9 @@ CREATE TABLE "Review" (
     "court_id" TEXT NOT NULL,
     "rating" INTEGER NOT NULL,
     "review_text" TEXT NOT NULL,
-    "Created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "Updated_at" TIMESTAMP(3) NOT NULL,
-    "Published" "REVIEW_STATUS" NOT NULL DEFAULT 'pending',
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "published" "REVIEW_STATUS" NOT NULL DEFAULT 'pending',
 
     CONSTRAINT "Review_pkey" PRIMARY KEY ("id")
 );
@@ -161,13 +164,25 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 CREATE UNIQUE INDEX "User_user_phone_key" ON "User"("user_phone");
 
 -- CreateIndex
+CREATE INDEX "User_email_idx" ON "User"("email");
+
+-- CreateIndex
+CREATE INDEX "User_user_phone_idx" ON "User"("user_phone");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Game_Type_name_key" ON "Game_Type"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Court_Game_Type_court_id_game_type_id_key" ON "Court_Game_Type"("court_id", "game_type_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Court_Availability_court_id_key" ON "Court_Availability"("court_id");
+CREATE INDEX "Slot_start_time_idx" ON "Slot"("start_time");
+
+-- CreateIndex
+CREATE INDEX "Slot_end_time_idx" ON "Slot"("end_time");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Slot_court_id_start_time_end_time_key" ON "Slot"("court_id", "start_time", "end_time");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Booking_slot_id_key" ON "Booking"("slot_id");
@@ -189,6 +204,9 @@ ALTER TABLE "Court_Media" ADD CONSTRAINT "Court_Media_court_id_fkey" FOREIGN KEY
 
 -- AddForeignKey
 ALTER TABLE "Court_Availability" ADD CONSTRAINT "Court_Availability_court_id_fkey" FOREIGN KEY ("court_id") REFERENCES "Court"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Court_Close_Dates" ADD CONSTRAINT "Court_Close_Dates_court_id_fkey" FOREIGN KEY ("court_id") REFERENCES "Court"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Slot" ADD CONSTRAINT "Slot_court_id_fkey" FOREIGN KEY ("court_id") REFERENCES "Court"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

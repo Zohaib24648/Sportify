@@ -8,6 +8,20 @@ import { CreateBookingDto } from './dto/createbooking.dto';
 import { SlotDto } from 'src/slot/dto/slot.dto';
 import { UpdateBookingDto } from './dto/updatebooking.dto';
 import { BookingFiltersDto } from './dto/bookingfilter.dto';
+import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(customParseFormat);
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+// Set default time zone to Pakistan Standard Time
+dayjs.tz.setDefault('Asia/Karachi');
+
+
+
 
 
 @Injectable()
@@ -16,14 +30,20 @@ export class BookingService {
 
     
 
-    async calculateTotalAmount(dto:SlotDto){
-        const {court_id, start_time, end_time} = dto;
-        const court = await this.courtService.get_court_details(court_id);
-        const durationInHours = (new Date(end_time).getTime() - new Date(start_time).getTime()) / (1000 * 60 * 60);
-        const totalAmount = durationInHours * court.hourly_rate;
-        return totalAmount;
+    async calculateTotalAmount(dto: SlotDto): Promise<number> {
+      const { court_id, start_time, end_time } = dto;
+      const court = await this.courtService.get_court_details(court_id);
+      
+      const startTime = dayjs.tz(start_time, 'Asia/Karachi');
+      const endTime = dayjs.tz(end_time, 'Asia/Karachi');
+      
+      const durationInHours = endTime.diff(startTime, 'hour', true);
+      const totalAmount = durationInHours * court.hourly_rate;
+    
+      return totalAmount;
     }
-
+    
+    
 
     async createBooking(dto : CreateBookingDto) {
       if (!this.slotService.timevalidator(dto)) {
@@ -44,8 +64,8 @@ export class BookingService {
             total_amount: totalAmount,
             paid_amount: 0,
             status: 'pending',
-            Created_at: new Date(),
-            Updated_at: new Date(),
+            created_at: new Date(),
+            updated_at: new Date(),
           },
         });
       });
@@ -55,33 +75,40 @@ export class BookingService {
       
     }
 
-      async updateBooking(dto : UpdateBookingDto) {
-        if (!this.slotService.timevalidator(dto)) {
-          throw new BadRequestException('Invalid time slot');
-        }
-        try {
-          const { booking_id, start_time, end_time } = dto;
-        
-        const booking = await this.getBookingDetails(booking_id);        
-        const court_id = booking.slot.court_id;
-
-        const slotdto : SlotDto  = {court_id , start_time, end_time};
-        const total_amount = await this.calculateTotalAmount(slotdto);
-        this.prisma.$transaction(async (prisma) => {
-        
-        await this.slotService.updateSlot(booking.slot.id, slotdto );
-        const updated_booking = await this.prisma.booking.update({
-          where: { id: booking_id },
-          data: {total_amount, Updated_at: new Date() },
-        });
-        
-        return updated_booking;
-        })} catch (error) {
-          
-          throw new InternalServerErrorException('Error updating booking', error.message);
-          
-        }
+    async updateBooking(dto: UpdateBookingDto) {
+      if (!this.slotService.timevalidator(dto)) {
+        throw new BadRequestException('Invalid time slot');
       }
+      try {
+        const { booking_id, start_time, end_time } = dto;
+    
+        const booking = await this.getBookingDetails(booking_id);
+        const court_id = booking.slot.court_id;
+    
+        // Optionally, validate booking status before updating
+        if (booking.status !== BOOKING_STATUS.pending && booking.status !== BOOKING_STATUS.confirmed) {
+          throw new BadRequestException('Cannot update booking in its current status');
+        }
+    
+        const slotdto: SlotDto = { court_id, start_time, end_time };
+        const total_amount = await this.calculateTotalAmount(slotdto);
+    
+        // Properly await and return the transaction
+        return await this.prisma.$transaction(async (prisma) => {
+          // Pass the transaction Prisma client to SlotService methods
+          await this.slotService.updateSlot(booking.slot.id, slotdto);
+          const updated_booking = await prisma.booking.update({
+            where: { id: booking_id },
+            data: { total_amount, updated_at: new Date() },
+          });
+    
+          return updated_booking;
+        });
+      } catch (error) {
+        throw new InternalServerErrorException('Error updating booking', error.message);
+      }
+    }
+        
       
     
     
@@ -92,7 +119,7 @@ export class BookingService {
                 include: {
                     slot: true,
                     user: true,
-                    Payment: true
+                    payment: true
                 
                 }
             
@@ -117,7 +144,7 @@ async getBookingDetails(id: string) {
           },
         },
         user: true,
-        Payment: true,
+        payment: true,
       },
     });
 
@@ -152,7 +179,7 @@ async getBookingDetails(id: string) {
               data: {
                 status: 'cancelled',
                 slot_id: null,
-                Updated_at: new Date(),
+                updated_at: new Date(),
               },
             });
               
@@ -197,15 +224,15 @@ async getBookingDetails(id: string) {
         }
       
         // Filter by date range
+        // Filter by date range
         if (start_time || end_time) {
-          where.slot = {
-            start_time: {
-              ...(start_time && { gte: new Date(start_time) }),
-              ...(end_time && { lte: new Date(end_time) }),
-            },
-          } as Prisma.SlotWhereInput;
-        }
-      
+        where.slot = {
+          start_time: {
+            ...(start_time && { gte: start_time.toISOString() }),
+            ...(end_time && { lte: end_time.toISOString() }),
+          },
+        } as Prisma.SlotWhereInput;
+}
         // Filter by game types
         if (gameTypes) {
           where.slot = where.slot || {};
@@ -256,7 +283,7 @@ async getBookingDetails(id: string) {
               },
             },
             user: true,
-            Payment: true,
+            payment: true,
           },
         });
 
@@ -286,7 +313,7 @@ try {
         },
       },
       user: true,
-      Payment: true,
+      payment: true,
     },
   });
   return bookings;

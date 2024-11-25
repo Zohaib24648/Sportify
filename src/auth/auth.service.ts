@@ -52,7 +52,7 @@ export class AuthService{
         try {
           const { email, password } = req;
       
-        const user = await this.prisma.user.findFirst({
+        const user = await this.prisma.user.findUnique({
           where: { email },
         });
       

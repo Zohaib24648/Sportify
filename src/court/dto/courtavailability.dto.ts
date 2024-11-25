@@ -1,22 +1,17 @@
-import { Type } from "class-transformer"
-import { ArrayContains, ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsDate } from "class-validator"
+import { DAY } from '@prisma/client';
+import { IsNotEmpty, IsString, Matches } from 'class-validator';
 
+export class CourtAvailabilityDto {
+  @IsNotEmpty()
+  day: DAY;
 
-export class CourtAvailabilityDto{
-    
-    @IsDate()
-    @Type(() => Date)
-    start_time : Date
-    
-    @Type(() => Date)
-    @IsDate()
-    end_time :  Date
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^\d{2}:\d{2}$/, { message: 'start_time must be in HH:mm format' })
+  start_time: string;
 
-    @IsArray()
-    @IsBoolean({each : true})
-    @ArrayMaxSize(7)
-    @ArrayMinSize(7)
-    Day_of_week : boolean[]
-
-    //  Day_of_week Boolean[] @default([true, true, true, true, true, true, true])
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^\d{2}:\d{2}$/, { message: 'end_time must be in HH:mm format' })
+  end_time: string;
 }

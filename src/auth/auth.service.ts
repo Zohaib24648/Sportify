@@ -28,7 +28,7 @@ export class AuthService{
                     password_hash : hash,
                     name:name,
                     user_phone:user_phone,
-                    role:"user"
+                    role: 'user'
                     
                 }
             })

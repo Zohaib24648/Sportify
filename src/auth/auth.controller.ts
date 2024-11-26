@@ -12,6 +12,7 @@ constructor(private authService:AuthService) {}
 @ApiOperation({ summary: 'Sign up a new user' })
 @ApiResponse({ status: 201, description: 'User successfully created and signed in.' })
 @ApiResponse({ status: 400, description: 'Bad request' })
+@ApiResponse({ status: 409, description: 'User already exists' })
 @Post('signup')
 signup(@Body () req :SignupDto){
 return this.authService.signup(req)
@@ -19,7 +20,7 @@ return this.authService.signup(req)
 
 
 @ApiOperation({ summary: 'Sign in an existing user' })
-  @ApiResponse({ status: 200, description: 'User successfully signed in.' })
+  @ApiResponse({ status: 200, description: 'User successfully signed in.'})
   @ApiResponse({ status: 401, description: 'Unauthorized' })
 @Post('signin')
 signin(@Body() req:SigninDto){

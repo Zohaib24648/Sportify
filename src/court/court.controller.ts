@@ -24,7 +24,7 @@ export class CourtController {
     @ApiOperation({ summary: 'Create a new court' })
     @ApiResponse({ status: 201, description: 'Court successfully created' })
     @ApiResponse({ status: 409, description: 'Court with this name already exists' })
-    @ApiBearerAuth() // Adds JWT authorization to the endpoint
+    @ApiBearerAuth()
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
     @Post('create_court')
@@ -35,7 +35,8 @@ export class CourtController {
 
 
     @ApiOperation({ summary: 'Retrieve a list of courts' })
-    @ApiResponse({ status: 200, description: 'List of courts' })  
+    @ApiResponse({ status: 200, description: 'List of courts' })
+    @ApiBearerAuth()
     //Get Courts
     @UseGuards(AuthGuard('jwt'))
     @Get('get_courts')
@@ -50,6 +51,7 @@ export class CourtController {
     @ApiOperation({ summary: 'Update a court by ID' })
     @ApiResponse({ status: 200, description: 'Court updated successfully' })
     @ApiResponse({ status: 404, description: 'Court not found' })
+    @ApiBearerAuth()
     //Update Court
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
@@ -63,6 +65,7 @@ export class CourtController {
     @ApiResponse({ status: 201, description: 'Court availability created successfully' })
     @ApiResponse({ status: 404, description: 'Court not found' })
     @ApiResponse({ status: 409, description: 'Availability overlaps with an existing one' })
+    @ApiBearerAuth()
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
     @Post('create_court_availability/:id')
@@ -73,6 +76,7 @@ export class CourtController {
     @ApiOperation({ summary: 'Get the availability of a specific court' })
     @ApiResponse({ status: 200, description: 'Court availability retrieved successfully' })
     @ApiResponse({ status: 404, description: 'Court not found' })
+    @ApiBearerAuth()
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Get('get_court_availability/:id')
@@ -86,6 +90,7 @@ export class CourtController {
     @ApiResponse({ status: 200, description: 'Court availability updated successfully' })
     @ApiResponse({ status: 404, description: 'Court availability not found' })
     @ApiResponse({ status: 409, description: 'Availability overlaps with an existing one' })
+    @ApiBearerAuth()
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
     @Put('update_court_availability/:id')
@@ -100,6 +105,7 @@ export class CourtController {
     @ApiOperation({ summary: 'Delete a court by ID' })
     @ApiResponse({ status: 200, description: 'Court deleted successfully' })
     @ApiResponse({ status: 404, description: 'Court not found' })
+    @ApiBearerAuth()
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
     @Delete('delete_court/:id')
@@ -112,6 +118,7 @@ export class CourtController {
     @ApiOperation({ summary: 'Get details of a specific court by ID' })
     @ApiResponse({ status: 200, description: 'Court details retrieved successfully' })
     @ApiResponse({ status: 404, description: 'Court not found' })
+    @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'))
     @Get('get_court_details/:id')
     get_court_details(@Param('id') id:string){
@@ -123,6 +130,7 @@ export class CourtController {
     @ApiOperation({ summary: 'Add specifications to a court' })
     @ApiResponse({ status: 201, description: 'Court specifications added successfully' })
     @ApiResponse({ status: 404, description: 'Court not found' })
+    @ApiBearerAuth()
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
     @Post ('add_court_specs/:id')
@@ -135,6 +143,7 @@ export class CourtController {
     @ApiOperation({ summary: 'Retrieve specifications of a specific court' })
     @ApiResponse({ status: 200, description: 'List of court specifications' })
     @ApiResponse({ status: 404, description: 'Court not found' })
+    @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'))
     @Get ('get_court_specs/:id')
     get_court_specs(@Param('id') id:string){
@@ -147,6 +156,7 @@ export class CourtController {
         @ApiOperation({ summary: 'Delete a court specification by ID' })
         @ApiResponse({ status: 200, description: 'Court specification deleted successfully' })
         @ApiResponse({ status: 404, description: 'Court specification not found' })
+        @ApiBearerAuth()
         @Roles('admin')
         @UseGuards(AuthGuard('jwt'))
         @Delete ('delete_court_spec/:id')
@@ -158,6 +168,7 @@ export class CourtController {
       @ApiOperation({ summary: 'Update a court specification by ID' })
       @ApiResponse({ status: 200, description: 'Court specification updated successfully' })
       @ApiResponse({ status: 404, description: 'Court specification not found' })
+      @ApiBearerAuth()
       @Roles('admin')
       @UseGuards(AuthGuard('jwt'),RolesGuard)
       @Post ('update_court_specs/:id')

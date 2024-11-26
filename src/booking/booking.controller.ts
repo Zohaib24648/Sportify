@@ -9,7 +9,7 @@ import { PaymentService } from 'src/payment/payment.service';
 import { CreateBookingDto } from './dto/createbooking.dto';
 import { UpdateBookingDto } from './dto/updatebooking.dto';
 import { BookingFiltersDto } from './dto/bookingfilter.dto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Bookings')
 @Controller('booking')
@@ -17,9 +17,10 @@ export class BookingController {
     constructor(private bookingService: BookingService, private paymentservice: PaymentService) {}
 
   //Create Booking
-  @ApiOperation({ summary: 'Create a new booking' })
+@ApiOperation({ summary: 'Create a new booking' })
 @ApiResponse({ status: 201, description: 'Booking successfully created.' })
 @ApiResponse({ status: 400, description: 'Invalid time slot or other errors.' })
+@ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Post('create_booking')
   async createBooking(@Body() dto: CreateBookingDto) {
@@ -30,6 +31,7 @@ export class BookingController {
 @ApiOperation({ summary: 'Get all bookings (Admin only)' })
 @ApiResponse({ status: 200, description: 'List of all bookings.' })
 @ApiResponse({ status: 403, description: 'Forbidden. Admin role required.' })
+@ApiBearerAuth()
   //Get Bookings
   @Roles('admin')
   @UseGuards(AuthGuard('jwt'),RolesGuard)
@@ -41,6 +43,7 @@ export class BookingController {
   @ApiOperation({ summary: 'Update an existing booking' })
 @ApiResponse({ status: 200, description: 'Booking updated successfully.' })
 @ApiResponse({ status: 400, description: 'Invalid time slot or booking status prevents update.' })
+@ApiBearerAuth()
   //Update Booking
   @Put('update_booking/:id')
   async updateBooking(@Body() dto: UpdateBookingDto) {
@@ -50,6 +53,7 @@ export class BookingController {
 @ApiOperation({ summary: 'Cancel a booking' })
 @ApiResponse({ status: 200, description: 'Booking canceled successfully.' })
 @ApiResponse({ status: 404, description: 'Booking not found.' })
+@ApiBearerAuth()
   //Delete Booking
   @Post('cancel_booking/:id')
   async cancelBooking(@Param('id') id: string) {
@@ -59,6 +63,7 @@ export class BookingController {
   @ApiOperation({ summary: 'Get details of a specific booking' })
 @ApiResponse({ status: 200, description: 'Booking details fetched successfully.' })
 @ApiResponse({ status: 404, description: 'Booking not found.' })
+@ApiBearerAuth()
   //Get Booking Details
   @Get('get_booking_details/:id')
   async getBookingDetails(@Param('id') id: string) {
@@ -69,6 +74,7 @@ export class BookingController {
 @ApiOperation({ summary: 'Filter bookings based on provided criteria' })
 @ApiResponse({ status: 200, description: 'Filtered bookings returned successfully.' })
 @ApiResponse({ status: 400, description: 'Invalid filter parameters or error in filtering.' })
+@ApiBearerAuth()
   @Get()
   async filterBookings(@Query() filters: BookingFiltersDto) {
     return this.bookingService.getBookingsWithFilters(filters);

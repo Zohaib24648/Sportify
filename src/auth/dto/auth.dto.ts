@@ -5,12 +5,12 @@ export class AuthDto {
 
 //swagger documentation
 
-    @ApiProperty({ description: 'The user\'s email address' })
+    @ApiProperty({ description: 'The user\'s email address', example: "user@gmail.com" })
     @IsEmail()
     @IsNotEmpty()
     email: string;
 
-    @ApiProperty({ description: 'The user\'s password' })
+    @ApiProperty({ description: 'The user\'s password', example : "password" })
     @IsNotEmpty()
     @IsString()
     password: string;

@@ -3,7 +3,7 @@ import { Body, Controller, Get, Post } from '@nestjs/common';
 import { Roles } from 'src/auth/guard/roles.decorator';
 import { SlotService } from './slot.service';
 import { SlotCourtDto } from './dto/slotcourt.dto';
-import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SlotDto } from './dto/slot.dto';
 import { TimeDto } from './dto/time.dto';
 
@@ -27,6 +27,7 @@ export class SlotController {
       status: 404,
       description: 'No available slots found for the given court and date',
     })
+    @ApiBearerAuth()
     @Roles('admin')
     @Post('get_available_slots')
     getAvailableSlotsForDay(@Body() dto : any){
@@ -42,6 +43,7 @@ export class SlotController {
       description: 'Get all slots',
       type: [SlotDto],
     })
+    @ApiBearerAuth()
     @Roles('admin')
     @Get('get_slots')
     getSlots() {

@@ -66,7 +66,7 @@ model User {
   password_hash String
   user_pfp_link String    @default("https://www.shutterstock.com/shutterstock/photos/1677509740/display_1500/stock-vector-default-avatar-profile-icon-social-media-user-vector-1677509740.jpg")
   user_phone    String    @unique
-  role          ROLE      @default(user)
+  role          ROLE[]    @default([user])
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt
   bookings      Booking[]

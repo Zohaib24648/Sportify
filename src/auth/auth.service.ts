@@ -1,6 +1,6 @@
 //auth/auth.service.ts
 import { ConflictException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from "@nestjs/common";
-import { Prisma, PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient, ROLE } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { AuthDto } from "./dto";
 import * as argon from "argon2";
@@ -28,8 +28,6 @@ export class AuthService{
                     password_hash : hash,
                     name:name,
                     user_phone:user_phone,
-                    role: 'user'
-                    
                 }
             })
             return this.signToken(user.id,user.email,user.role);
@@ -74,7 +72,7 @@ export class AuthService{
       }
       
 
-    async signToken(userid: string, email: string, role: string): Promise<{ access_token: string }> {
+    async signToken(userid: string, email: string, role: string[]): Promise<{ access_token: string }> {
         try {
           const payload = { sub: userid, email,role };
         const token = await this.jwt.signAsync(payload, {

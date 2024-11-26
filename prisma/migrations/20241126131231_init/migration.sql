@@ -25,7 +25,7 @@ CREATE TABLE "User" (
     "password_hash" TEXT NOT NULL,
     "user_pfp_link" TEXT NOT NULL DEFAULT 'https://www.shutterstock.com/shutterstock/photos/1677509740/display_1500/stock-vector-default-avatar-profile-icon-social-media-user-vector-1677509740.jpg',
     "user_phone" TEXT NOT NULL,
-    "role" "ROLE" NOT NULL DEFAULT 'user',
+    "role" "ROLE"[] DEFAULT ARRAY['user']::"ROLE"[],
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 

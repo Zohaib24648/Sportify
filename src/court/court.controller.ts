@@ -9,8 +9,10 @@ import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { ROLE } from '@prisma/client';
 import { CourtSpecDto } from 'src/court/dto/court_spec.dto';
 import { CourtAvailabilityDto } from './dto/courtavailability.dto';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 
+@ApiTags('Courts')
 @Controller('court')
 export class CourtController {
     constructor(private court_service:CourtService) {}
@@ -19,6 +21,10 @@ export class CourtController {
     
     //Create Court
     
+    @ApiOperation({ summary: 'Create a new court' })
+    @ApiResponse({ status: 201, description: 'Court successfully created' })
+    @ApiResponse({ status: 409, description: 'Court with this name already exists' })
+    @ApiBearerAuth() // Adds JWT authorization to the endpoint
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
     @Post('create_court')
@@ -27,6 +33,9 @@ export class CourtController {
     }
     
 
+
+    @ApiOperation({ summary: 'Retrieve a list of courts' })
+    @ApiResponse({ status: 200, description: 'List of courts' })  
     //Get Courts
     @UseGuards(AuthGuard('jwt'))
     @Get('get_courts')
@@ -35,8 +44,13 @@ export class CourtController {
     }
 
     
-    //Update Court
 
+
+
+    @ApiOperation({ summary: 'Update a court by ID' })
+    @ApiResponse({ status: 200, description: 'Court updated successfully' })
+    @ApiResponse({ status: 404, description: 'Court not found' })
+    //Update Court
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
     @Put('update_court/:id')
@@ -45,6 +59,10 @@ export class CourtController {
     }
 
     //create Court Availability
+    @ApiOperation({ summary: 'Create availability for a court' })
+    @ApiResponse({ status: 201, description: 'Court availability created successfully' })
+    @ApiResponse({ status: 404, description: 'Court not found' })
+    @ApiResponse({ status: 409, description: 'Availability overlaps with an existing one' })
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
     @Post('create_court_availability/:id')
@@ -52,6 +70,9 @@ export class CourtController {
         return this.court_service.createCourtAvailability(id, dto);
     }
     //get Court Availability
+    @ApiOperation({ summary: 'Get the availability of a specific court' })
+    @ApiResponse({ status: 200, description: 'Court availability retrieved successfully' })
+    @ApiResponse({ status: 404, description: 'Court not found' })
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Get('get_court_availability/:id')
@@ -61,6 +82,10 @@ export class CourtController {
     
 
     //Update Court Availability
+    @ApiOperation({ summary: 'Update availability for a court' })
+    @ApiResponse({ status: 200, description: 'Court availability updated successfully' })
+    @ApiResponse({ status: 404, description: 'Court availability not found' })
+    @ApiResponse({ status: 409, description: 'Availability overlaps with an existing one' })
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
     @Put('update_court_availability/:id')
@@ -72,6 +97,9 @@ export class CourtController {
 
 
     //Delete Court
+    @ApiOperation({ summary: 'Delete a court by ID' })
+    @ApiResponse({ status: 200, description: 'Court deleted successfully' })
+    @ApiResponse({ status: 404, description: 'Court not found' })
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
     @Delete('delete_court/:id')
@@ -81,6 +109,9 @@ export class CourtController {
 
 
     //Get Court Details
+    @ApiOperation({ summary: 'Get details of a specific court by ID' })
+    @ApiResponse({ status: 200, description: 'Court details retrieved successfully' })
+    @ApiResponse({ status: 404, description: 'Court not found' })
     @UseGuards(AuthGuard('jwt'))
     @Get('get_court_details/:id')
     get_court_details(@Param('id') id:string){
@@ -89,6 +120,9 @@ export class CourtController {
 
 
     // Add Court Specs
+    @ApiOperation({ summary: 'Add specifications to a court' })
+    @ApiResponse({ status: 201, description: 'Court specifications added successfully' })
+    @ApiResponse({ status: 404, description: 'Court not found' })
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
     @Post ('add_court_specs/:id')
@@ -98,6 +132,9 @@ export class CourtController {
 
 
     //Get Court Specs
+    @ApiOperation({ summary: 'Retrieve specifications of a specific court' })
+    @ApiResponse({ status: 200, description: 'List of court specifications' })
+    @ApiResponse({ status: 404, description: 'Court not found' })
     @UseGuards(AuthGuard('jwt'))
     @Get ('get_court_specs/:id')
     get_court_specs(@Param('id') id:string){
@@ -107,6 +144,9 @@ export class CourtController {
 
 
         //Delete Court Specs
+        @ApiOperation({ summary: 'Delete a court specification by ID' })
+        @ApiResponse({ status: 200, description: 'Court specification deleted successfully' })
+        @ApiResponse({ status: 404, description: 'Court specification not found' })
         @Roles('admin')
         @UseGuards(AuthGuard('jwt'))
         @Delete ('delete_court_spec/:id')
@@ -115,7 +155,9 @@ export class CourtController {
         }
 
       // Update Court Specs
-    
+      @ApiOperation({ summary: 'Update a court specification by ID' })
+      @ApiResponse({ status: 200, description: 'Court specification updated successfully' })
+      @ApiResponse({ status: 404, description: 'Court specification not found' })
       @Roles('admin')
       @UseGuards(AuthGuard('jwt'),RolesGuard)
       @Post ('update_court_specs/:id')

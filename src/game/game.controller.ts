@@ -6,14 +6,19 @@ import { Roles } from 'src/auth/guard/roles.decorator';
 import { GameService } from './game.service';
 import { GameDto } from './dto/game.dto';
 import { AddGameCourtDto } from './dto/addgamecourt.dto';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 
+@ApiTags('Games')
 @Controller('game')
 export class GameController {
     constructor(private game_service: GameService) {}
 
 
-    
+
+    @ApiOperation({ summary: 'Create a new game' })
+    @ApiResponse({ status: 201, description: 'Game created successfully' })
+    @ApiResponse({ status: 400, description: 'Bad request' })
     // Create Game
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
@@ -23,6 +28,8 @@ export class GameController {
         }
 
 
+        @ApiOperation({ summary: 'Retrieve all games' })
+    @ApiResponse({ status: 200, description: 'List of games retrieved' })
     // Get Games
     @UseGuards(AuthGuard('jwt'))
     @Get('get_games')
@@ -30,6 +37,9 @@ export class GameController {
         return this.game_service.get_games();
     }
 
+    @ApiOperation({ summary: 'Delete a game by ID' })
+    @ApiResponse({ status: 200, description: 'Game deleted successfully' })
+    @ApiResponse({ status: 404, description: 'Game not found' })
     // Delete Game
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
@@ -39,6 +49,9 @@ export class GameController {
     }
 
 
+    @ApiOperation({ summary: 'Update a game by ID' })
+    @ApiResponse({ status: 200, description: 'Game updated successfully' })
+    @ApiResponse({ status: 404, description: 'Game not found' })
     // Update Game
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
@@ -47,6 +60,9 @@ export class GameController {
         return this.game_service.update_game(id, dto);
     }
 
+    @ApiOperation({ summary: 'Add a game to a court' })
+    @ApiResponse({ status: 201, description: 'Game successfully added to court' })
+    @ApiResponse({ status: 409, description: 'Conflict - Game already linked to this court' })
     // Add Game to Court
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
@@ -56,6 +72,9 @@ export class GameController {
     }
 
 
+    @ApiOperation({ summary: 'Delete a game from a court' })
+    @ApiResponse({ status: 200, description: 'Game successfully deleted from court' })
+    @ApiResponse({ status: 404, description: 'Game or court not found' })
     // Delete Game from Court
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
@@ -66,6 +85,9 @@ export class GameController {
 
 
 
+    @ApiOperation({ summary: 'Get all games for a specific court' })
+    @ApiResponse({ status: 200, description: 'List of court games retrieved' })
+    @ApiResponse({ status: 404, description: 'Court not found' })
     // Get Court Games
     @UseGuards(AuthGuard('jwt'))
     @Get('get_court_games/:id')

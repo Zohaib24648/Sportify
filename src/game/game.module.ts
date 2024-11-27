@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { GameController } from './game.controller';
 import { GameService } from './game.service';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { CourtService } from 'src/court/court.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { CourtService } from '../court/court.service';
 
 @Module({
   controllers: [GameController],

@@ -1,7 +1,7 @@
 //auth/auth.service.ts
 import { ConflictException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { Prisma, PrismaClient, ROLE } from "@prisma/client";
-import { PrismaService } from "src/prisma/prisma.service";
+import { PrismaService } from "../prisma/prisma.service";
 import { AuthDto } from "./dto";
 import * as argon from "argon2";
 import { JwtService } from "@nestjs/jwt";

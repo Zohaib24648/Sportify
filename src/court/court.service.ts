@@ -2,9 +2,9 @@
 
 import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { DAY, Prisma } from '@prisma/client';
-import { CourtDto } from 'src/court/dto/court.dto';
-import { CourtSpecDto } from 'src/court/dto/court_spec.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { CourtDto } from '../court/dto/court.dto';
+import { CourtSpecDto } from '../court/dto/court_spec.dto';
+import { PrismaService } from '../prisma/prisma.service';
 import { CourtAvailabilityDto } from './dto/courtavailability.dto';
 
 

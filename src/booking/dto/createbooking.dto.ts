@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import { IsDate, IsNotEmpty, IsString } from "class-validator";
-import { SlotDto } from "src/slot/dto/slot.dto";
+import { SlotDto } from "../../slot/dto/slot.dto";
 
 export class CreateBookingDto extends SlotDto {    
     

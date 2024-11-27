@@ -1,13 +1,13 @@
 //court/court.controller.ts
 import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { CourtService } from './court.service';
-import { CourtDto } from 'src/court/dto/court.dto';
+import { CourtDto } from '../court/dto/court.dto';
 import { JwtService } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
-import { Roles } from 'src/auth/guard/roles.decorator';
-import { RolesGuard } from 'src/auth/guard/roles.guard';
+import { Roles } from '../auth/guard/roles.decorator';
+import { RolesGuard } from '../auth/guard/roles.guard';
 import { ROLE } from '@prisma/client';
-import { CourtSpecDto } from 'src/court/dto/court_spec.dto';
+import { CourtSpecDto } from '../court/dto/court_spec.dto';
 import { CourtAvailabilityDto } from './dto/courtavailability.dto';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 

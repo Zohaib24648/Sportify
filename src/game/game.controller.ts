@@ -1,8 +1,8 @@
 import { Controller, Put } from '@nestjs/common';
 import { Body, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from 'src/auth/guard/roles.guard';
-import { Roles } from 'src/auth/guard/roles.decorator';
+import { RolesGuard } from '../auth/guard/roles.guard';
+import { Roles } from '../auth/guard/roles.decorator';
 import { GameService } from './game.service';
 import { GameDto } from './dto/game.dto';
 import { AddGameCourtDto } from './dto/addgamecourt.dto';

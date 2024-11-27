@@ -1,11 +1,11 @@
 //paymernt service
 import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { PAYMENT_METHOD, PAYMENT_STATUS, Prisma } from '@prisma/client';
-import { CourtService } from 'src/court/court.service';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { CourtService } from '../court/court.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { PaymentDto } from './dto/payment.dto';
 import { PImageDto } from './dto/p_image.dto';
-import { BookingService } from 'src/booking/booking.service';
+import { BookingService } from '../booking/booking.service';
 import { PaymentHandlerDto } from './dto/paymenthandler.dto';
 
 @Injectable()

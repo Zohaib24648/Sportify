@@ -1,6 +1,6 @@
 //src/slot/slot.controller.ts
 import { Body, Controller, Get, Post } from '@nestjs/common';
-import { Roles } from 'src/auth/guard/roles.decorator';
+import { Roles } from '../auth/guard/roles.decorator';
 import { SlotService } from './slot.service';
 import { SlotCourtDto } from './dto/slotcourt.dto';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';

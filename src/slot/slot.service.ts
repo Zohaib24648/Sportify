@@ -6,8 +6,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { SlotDto } from './dto/slot.dto';
-import { CourtService } from 'src/court/court.service';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { CourtService } from '../court/court.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { TimeDto } from './dto/time.dto';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';

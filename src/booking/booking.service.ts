@@ -1,11 +1,11 @@
 //booking.service.ts
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { BOOKING_STATUS, PAYMENT_METHOD, PAYMENT_STATUS, Prisma } from '@prisma/client';
-import { SlotService } from 'src/slot/slot.service';
-import { CourtService } from 'src/court/court.service';
-import { CreateBookingDto } from './dto/createbooking.dto';
-import { SlotDto } from 'src/slot/dto/slot.dto';
+import { SlotService } from '../slot/slot.service';
+import { CourtService } from '../court/court.service';
+import { CreateBookingDto } from '../booking/dto/createbooking.dto';
+import { SlotDto } from '../slot/dto/slot.dto';
 import { UpdateBookingDto } from './dto/updatebooking.dto';
 import { BookingFiltersDto } from './dto/bookingfilter.dto';
 import dayjs from 'dayjs';

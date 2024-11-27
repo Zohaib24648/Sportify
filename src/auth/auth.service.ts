@@ -14,12 +14,13 @@ export class AuthService{
 
     constructor (private  prisma:PrismaService,private jwt:JwtService ){}
 
-    async signup(req:SignupDto){
+    async signup(dto:SignupDto){
         
-        const email = req.email;
-        const hash = await argon.hash(req.password);
-        const name = req.name;
-        const user_phone = req.user_phone;
+        const email = dto.email;
+        const hash = await argon.hash(dto.password);
+        const name = dto.name;
+        const user_phone = dto.user_phone;
+        const secondary_user_phone = dto.secondary_user_phone;
 
         try{
             const user = await this.prisma.user.create({
@@ -28,6 +29,7 @@ export class AuthService{
                     password_hash : hash,
                     name:name,
                     user_phone:user_phone,
+                    secondary_user_phone:secondary_user_phone,
                 }
             })
             return this.signToken(user.id,user.email,user.role);

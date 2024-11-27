@@ -1,5 +1,5 @@
 //auth/dto/signup.dto.ts
-import { IsNotEmpty, IsPhoneNumber, IsString } from "class-validator";
+import { IsNotEmpty, IsOptional, IsPhoneNumber, IsString } from "class-validator";
 import { AuthDto } from "./auth.dto";
 import { ApiProperty } from "@nestjs/swagger";
 
@@ -13,4 +13,10 @@ export class SignupDto extends AuthDto {
     @IsNotEmpty()
     @IsPhoneNumber('PK', { message: 'Phone number must be in the format +923331234567' })
     user_phone: string;
+
+    @ApiProperty({ description: 'The user\'s phone number' , example: "+923331234567"})
+    @IsOptional()
+    @IsPhoneNumber('PK', { message: 'Phone number must be in the format +923331234567' })
+    secondary_user_phone: string;
+
 }

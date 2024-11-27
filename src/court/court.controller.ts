@@ -22,6 +22,8 @@ export class CourtController {
     //Create Court
     
     @ApiOperation({ summary: 'Create a new court' })
+    @ApiResponse({ status: 400, description: 'Request data error , ' })
+    @ApiResponse({ status: 500, description: 'Undefined Error , ' })
     @ApiResponse({ status: 201, description: 'Court successfully created' })
     @ApiResponse({ status: 409, description: 'Court with this name already exists' })
     @ApiBearerAuth()
@@ -36,8 +38,11 @@ export class CourtController {
 
     @ApiOperation({ summary: 'Retrieve a list of courts' })
     @ApiResponse({ status: 200, description: 'List of courts' })
+    @ApiResponse({ status: 404, description: 'No courts found' })
+    @ApiResponse({ status: 500, description: 'Undefined Error' })
     @ApiBearerAuth()
     //Get Courts
+    @Roles('admin','user')
     @UseGuards(AuthGuard('jwt'))
     @Get('get_courts')
     getCourts(){
@@ -50,7 +55,9 @@ export class CourtController {
 
     @ApiOperation({ summary: 'Update a court by ID' })
     @ApiResponse({ status: 200, description: 'Court updated successfully' })
+    @ApiResponse({ status: 400, description: 'Request data error' })
     @ApiResponse({ status: 404, description: 'Court not found' })
+    @ApiResponse({ status: 500, description: 'Undefined Error' })
     @ApiBearerAuth()
     //Update Court
     @Roles('admin')
@@ -62,9 +69,11 @@ export class CourtController {
 
     //create Court Availability
     @ApiOperation({ summary: 'Create availability for a court' })
+    @ApiResponse({ status: 400, description: 'Request data error' })
     @ApiResponse({ status: 201, description: 'Court availability created successfully' })
     @ApiResponse({ status: 404, description: 'Court not found' })
     @ApiResponse({ status: 409, description: 'Availability overlaps with an existing one' })
+    @ApiResponse({ status: 500, description: 'Undefined Error' })
     @ApiBearerAuth()
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
@@ -75,7 +84,7 @@ export class CourtController {
     //get Court Availability
     @ApiOperation({ summary: 'Get the availability of a specific court' })
     @ApiResponse({ status: 200, description: 'Court availability retrieved successfully' })
-    @ApiResponse({ status: 404, description: 'Court not found' })
+    @ApiResponse({ status: 500, description: 'Undefined Error' })
     @ApiBearerAuth()
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -87,9 +96,12 @@ export class CourtController {
 
     //Update Court Availability
     @ApiOperation({ summary: 'Update availability for a court' })
+    @ApiOperation({ summary: 'Update availability for a court' })
     @ApiResponse({ status: 200, description: 'Court availability updated successfully' })
+    @ApiResponse({ status: 400, description: 'Bad Request: Invalid day or time range' })
     @ApiResponse({ status: 404, description: 'Court availability not found' })
     @ApiResponse({ status: 409, description: 'Availability overlaps with an existing one' })
+    @ApiResponse({ status: 500, description: 'Internal Server Error' })
     @ApiBearerAuth()
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
@@ -118,6 +130,7 @@ export class CourtController {
     @ApiOperation({ summary: 'Get details of a specific court by ID' })
     @ApiResponse({ status: 200, description: 'Court details retrieved successfully' })
     @ApiResponse({ status: 404, description: 'Court not found' })
+    @ApiResponse({ status: 500, description: 'Undefined Error' })
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'))
     @Get('get_court_details/:id')

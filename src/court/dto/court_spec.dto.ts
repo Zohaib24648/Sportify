@@ -6,8 +6,8 @@ import {IsNotEmpty, IsString } from "class-validator";
 export class CourtSpecDto {
     
     @ApiProperty({
-        description: 'The name of the court specification (e.g., court type)',
-        example: 'court_type',
+        description: 'The name of the court specification',
+        example: 'area',
       })
     @IsString()
     @IsNotEmpty()
@@ -15,8 +15,8 @@ export class CourtSpecDto {
 
 
     @ApiProperty({
-        description: 'The value of the specification (e.g., grass, clay)',
-        example: 'clay',
+        description: 'The value of the specification',
+        example: '500sqm',
       })
     @IsNotEmpty()
     @IsString()

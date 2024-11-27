@@ -8,7 +8,7 @@ export class CourtAvailabilityDto {
   @ApiProperty({
     description: 'The day of the week for the availability',
     example: 'monday', // You can replace this with your enum values
-    enum: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+    enum: DAY,
   })
   @IsNotEmpty()
   day: DAY;

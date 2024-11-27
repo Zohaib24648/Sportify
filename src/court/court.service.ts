@@ -37,12 +37,18 @@ export class CourtService {
           if (existingCourt) {
             throw new ConflictException('Court with this name already exists');
           }
-        
+
           return this.prisma.court.create({
             data: dto,
           });
           
-        } catch (error) {
+        } 
+        catch (error) {
+          if (error instanceof ConflictException) {
+            throw error;
+          }
+
+
           throw new InternalServerErrorException('Failed to create court',error.message);
         }
       }
@@ -52,7 +58,7 @@ export class CourtService {
 
     async get_Courts(){
       try {
-        return this.prisma.court.findMany();        
+        return this.prisma.court.findMany();      
       } catch (error) {
         throw new InternalServerErrorException('Failed to get courts',error.message);        
       }
@@ -88,6 +94,7 @@ export class CourtService {
 
     async updateCourt(id: string, dto: CourtDto) {
       this.validateCourtData(dto);
+
         try {
             const updatedCourt = await this.prisma.court.update({
                 where: {
@@ -97,7 +104,6 @@ export class CourtService {
                     ...dto,
                 },
             });
-            console.log('Court updated successfully:', updatedCourt);
             return updatedCourt;
         } catch (error) {
             if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -260,7 +266,7 @@ export class CourtService {
 
     async createCourtAvailability(court_id: string, dto: CourtAvailabilityDto) {
       const { day, start_time, end_time } = dto;
-    
+
       // Validate day, start_time, and end_time
       if (!Object.values(DAY).includes(day)) {
         throw new BadRequestException(`Invalid day: ${day}`);
@@ -271,6 +277,10 @@ export class CourtService {
         throw new BadRequestException('Start time must be before end time');
       }
     
+      const court = await this.prisma.court.findUnique({ where: { id: court_id } });
+      if (!court) {
+        throw new NotFoundException(`Court with ID ${court_id} not found`);
+      }
       try {
         // Check for overlapping availabilities on the same day
         const overlappingAvailabilities = await this.prisma.court_Availability.findMany({
@@ -300,6 +310,9 @@ export class CourtService {
           },
         });
       } catch (error) {
+        if (error instanceof ConflictException) {
+          throw error;
+        }
         throw new InternalServerErrorException('Failed to create court availability', error.message);
       }
     }

@@ -36,4 +36,16 @@ export class UserService {
         throw new NotFoundException('User not found', error.message);
       }
     }
+
+
+    async getBookingHistory(dto: any) {
+      const {userId} = dto;
+      try {
+        const bookingHistory = await this.prisma.booking.findMany({ where: {user_id: userId } });
+        return bookingHistory;
+      } catch (error) {
+        throw new NotFoundException('Booking history not found', error.message);
+      }
+      }
+
 }

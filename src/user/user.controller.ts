@@ -26,4 +26,11 @@ export class UserController {
        
   }
 
+  @Get('bookingHistory')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  async getBookingHistory(@Req() req) {
+    const dto = req.user;
+    return this.userService.getBookingHistory(dto);
+  }
+
 }

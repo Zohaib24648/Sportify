@@ -33,4 +33,11 @@ export class UserController {
     return this.userService.getBookingHistory(dto);
   }
 
+  @Get('paymentHistory')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  async getPaymentHistory(@Req() req) {
+    const dto = req.user;
+    return this.userService.getPaymentHistory(dto);
+  }
+
 }

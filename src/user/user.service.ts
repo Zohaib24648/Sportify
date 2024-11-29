@@ -48,4 +48,21 @@ export class UserService {
       }
       }
 
+
+      async getPaymentHistory(dto: any) {
+        const {userId} = dto;
+        try {
+          const paymentHistory = await this.prisma.booking.findMany({ where: {user_id: userId },
+          include : {
+            payment: true
+          }
+
+          });
+
+          const payments = paymentHistory.flatMap(booking => booking.payment);
+          return payments;
+        } catch (error) {
+          throw new NotFoundException('Payment history not found', error.message);
+        }
+        }
 }

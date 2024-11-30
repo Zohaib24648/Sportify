@@ -9,9 +9,10 @@ import { BookingModule } from './booking/booking.module';
 import { PaymentModule } from './payment/payment.module';
 import { SlotModule } from './slot/slot.module';
 import { GameModule } from './game/game.module';
+import { AdminModule } from './admin/admin.module';
 
 
 @Module({
-  imports: [AuthModule, UserModule, PrismaModule, ConfigModule.forRoot({}), CourtModule, BookingModule, PaymentModule, SlotModule, GameModule],
+  imports: [AuthModule, UserModule, PrismaModule, ConfigModule.forRoot({}), CourtModule, BookingModule, PaymentModule, SlotModule, GameModule, AdminModule],
 })
 export class AppModule {}

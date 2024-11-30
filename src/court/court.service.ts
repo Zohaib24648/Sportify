@@ -8,6 +8,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CourtAvailabilityDto } from './dto/courtavailability.dto';
 import { CourtMediaDto } from './dto/court_media.dto';
 import { updateCourtAvailabilityDto } from './dto/updatecourtavailability.dto';
+import { UpdateCourtMediaDto } from './dto/update_court_media.dto';
 import { PaginationDto } from 'src/booking/dto/pagination.dto';
 
 
@@ -331,6 +332,19 @@ export class CourtService {
       return this.prisma.court_Media.create({
         data: {
           court_id,
+          media_link,
+          media_type,
+        },
+      });
+
+    }
+
+
+    updateCourtMedia(id: string, dto : UpdateCourtMediaDto) {
+      const { media_type, media_link } = dto;
+      return this.prisma.court_Media.update({
+        where: { id },
+        data: {
           media_link,
           media_type,
         },

@@ -36,7 +36,7 @@ export class CourtDto {
 
     @ApiProperty({
         description: 'The hourly rate for using the court',
-        example: 50,
+        example: 5000,
     })
     @IsNumber()
     @IsNotEmpty()
@@ -44,8 +44,8 @@ export class CourtDto {
 
 
     @ApiProperty({
-        description: 'The minimum down payment required to book the court',
-        example: 100,
+        description: 'The minimum percentage down payment required to book the court',
+        example: 30,
     })
     @IsNumber()
     @IsNotEmpty()

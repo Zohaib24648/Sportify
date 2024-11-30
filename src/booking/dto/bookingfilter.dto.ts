@@ -10,6 +10,7 @@ import {
 } from "class-validator";
 
 export class BookingFiltersDto {
+    
     @ApiProperty({ description: 'Start time of the booking', required: false })
     @IsOptional()
     @IsDate()

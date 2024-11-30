@@ -68,12 +68,11 @@ export class PaymentController {
 
 
 
-   @Put('upload_payment_receipt')
    @ApiOperation({ summary: 'Upload a payment receipt (image)' })
    @ApiResponse({ status: 200, description: 'Payment image uploaded successfully' })
    @ApiResponse({ status: 400, description: 'Invalid booking ID or image' })
    @ApiBearerAuth()
- @Put('upload_payment_receipt')
+ @Post('upload_payment_receipt')
  async uploadPaymentReceipt(@Body() dto : PImageDto) {
    console.log(dto);
    return this.paymentService.uploadPaymentImage(dto);

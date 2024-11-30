@@ -10,6 +10,8 @@ import { ROLE } from '@prisma/client';
 import { CourtSpecDto } from 'src/court/dto/court_spec.dto';
 import { CourtAvailabilityDto } from './dto/courtavailability.dto';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { CourtMediaDto } from './dto/court_media.dto';
+import { updateCourtAvailabilityDto } from './dto/updatecourtavailability.dto';
 
 
 @ApiTags('Courts')
@@ -20,8 +22,9 @@ export class CourtController {
     
     
     //Create Court
-    
     @ApiOperation({ summary: 'Create a new court' })
+    @ApiResponse({ status: 400, description: 'Request data error , ' })
+    @ApiResponse({ status: 500, description: 'Undefined Error , ' })
     @ApiResponse({ status: 201, description: 'Court successfully created' })
     @ApiResponse({ status: 409, description: 'Court with this name already exists' })
     @ApiBearerAuth()
@@ -36,8 +39,11 @@ export class CourtController {
 
     @ApiOperation({ summary: 'Retrieve a list of courts' })
     @ApiResponse({ status: 200, description: 'List of courts' })
+    @ApiResponse({ status: 404, description: 'No courts found' })
+    @ApiResponse({ status: 500, description: 'Undefined Error' })
     @ApiBearerAuth()
     //Get Courts
+    @Roles('admin','user')
     @UseGuards(AuthGuard('jwt'))
     @Get('get_courts')
     getCourts(){
@@ -50,7 +56,9 @@ export class CourtController {
 
     @ApiOperation({ summary: 'Update a court by ID' })
     @ApiResponse({ status: 200, description: 'Court updated successfully' })
+    @ApiResponse({ status: 400, description: 'Request data error' })
     @ApiResponse({ status: 404, description: 'Court not found' })
+    @ApiResponse({ status: 500, description: 'Undefined Error' })
     @ApiBearerAuth()
     //Update Court
     @Roles('admin')
@@ -62,9 +70,11 @@ export class CourtController {
 
     //create Court Availability
     @ApiOperation({ summary: 'Create availability for a court' })
+    @ApiResponse({ status: 400, description: 'Request data error' })
     @ApiResponse({ status: 201, description: 'Court availability created successfully' })
     @ApiResponse({ status: 404, description: 'Court not found' })
     @ApiResponse({ status: 409, description: 'Availability overlaps with an existing one' })
+    @ApiResponse({ status: 500, description: 'Undefined Error' })
     @ApiBearerAuth()
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
@@ -75,7 +85,7 @@ export class CourtController {
     //get Court Availability
     @ApiOperation({ summary: 'Get the availability of a specific court' })
     @ApiResponse({ status: 200, description: 'Court availability retrieved successfully' })
-    @ApiResponse({ status: 404, description: 'Court not found' })
+    @ApiResponse({ status: 500, description: 'Undefined Error' })
     @ApiBearerAuth()
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -87,14 +97,17 @@ export class CourtController {
 
     //Update Court Availability
     @ApiOperation({ summary: 'Update availability for a court' })
+    @ApiOperation({ summary: 'Update availability for a court' })
     @ApiResponse({ status: 200, description: 'Court availability updated successfully' })
+    @ApiResponse({ status: 400, description: 'Bad Request: Invalid day or time range' })
     @ApiResponse({ status: 404, description: 'Court availability not found' })
     @ApiResponse({ status: 409, description: 'Availability overlaps with an existing one' })
+    @ApiResponse({ status: 500, description: 'Internal Server Error' })
     @ApiBearerAuth()
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
     @Put('update_court_availability/:id')
-    updateCourtAvailability(@Param('id') id:string, @Body() dto:CourtAvailabilityDto){
+    updateCourtAvailability(@Param('id') id:string, @Body() dto:updateCourtAvailabilityDto){
         return this.court_service.updateCourtAvailability(id,dto);
     }
 
@@ -118,6 +131,7 @@ export class CourtController {
     @ApiOperation({ summary: 'Get details of a specific court by ID' })
     @ApiResponse({ status: 200, description: 'Court details retrieved successfully' })
     @ApiResponse({ status: 404, description: 'Court not found' })
+    @ApiResponse({ status: 500, description: 'Undefined Error' })
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'))
     @Get('get_court_details/:id')
@@ -175,5 +189,36 @@ export class CourtController {
       update_court_specs(@Param('id') id:string, @Body() dto:CourtSpecDto){
           return this.court_service.update_court_spec(id,dto);
       }
+
+
+
+      @ApiOperation({ summary: 'Add media to a court' })
+      @ApiBearerAuth()
+      @Roles('admin')
+      @UseGuards(AuthGuard('jwt'),RolesGuard)
+      @Post('add_court_media')
+      add_court_media(@Body() dto:CourtMediaDto){
+          return this.court_service.addCourtMedia(dto);
+      }
+
+      @ApiOperation({ summary: 'deletes media from a court' })
+      @ApiBearerAuth()
+      @Roles('admin')
+      @UseGuards(AuthGuard('jwt'),RolesGuard)
+      @Delete('delete_court_media/:id')
+      delete_court_media(@Param('id') id:string){
+          return this.court_service.deleteCourtMedia(id);
+      }
+
+      @ApiOperation({ summary: 'get media of a court' })
+      @ApiBearerAuth()
+      @Roles('admin')
+      @UseGuards(AuthGuard('jwt'),RolesGuard)
+      @Get('get_court_media/:id')
+      get_court_media(@Param('id') id:string){
+        return this.court_service.getCourtMedia(id);
+        }
+
+
 
 }

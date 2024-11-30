@@ -89,5 +89,23 @@ export class AuthService{
           
         }
     }
+
+
+    async changePassword(id: string ,dto: any) {
+        const { oldPassword, newPassword } = dto;
+        const user = await this.prisma.user.findUnique({ where: { id} });
+          if (!user) {
+            throw new NotFoundException('user not found');
+          }
+          const match = await argon.verify(user.password_hash, oldPassword);
+          if (!match) {
+              throw new UnauthorizedException('Incorrect old Password');
+          }
+          const hash = await argon.hash(newPassword);
+              await this.prisma.user.update({ where: { id}, data: {
+                password_hash: hash
+                }
+                });
+        return { message: 'Password changed successfully' };
     
-}
+}}

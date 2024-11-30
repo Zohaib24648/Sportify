@@ -1,5 +1,5 @@
 //court/court.controller.ts
-import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { CourtService } from './court.service';
 import { CourtDto } from 'src/court/dto/court.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -12,6 +12,7 @@ import { CourtAvailabilityDto } from './dto/courtavailability.dto';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CourtMediaDto } from './dto/court_media.dto';
 import { updateCourtAvailabilityDto } from './dto/updatecourtavailability.dto';
+import { PaginationDto } from 'src/booking/dto/pagination.dto';
 
 
 @ApiTags('Courts')
@@ -42,12 +43,14 @@ export class CourtController {
     @ApiResponse({ status: 404, description: 'No courts found' })
     @ApiResponse({ status: 500, description: 'Undefined Error' })
     @ApiBearerAuth()
+   
+   
     //Get Courts
     @Roles('admin','user')
     @UseGuards(AuthGuard('jwt'))
     @Get('get_courts')
-    getCourts(){
-        return this.court_service.get_Courts();
+    getCourts(@Query() dto : PaginationDto){
+        return this.court_service.get_Courts(dto);
     }
 
     

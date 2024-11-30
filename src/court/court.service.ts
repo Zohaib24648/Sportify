@@ -8,6 +8,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CourtAvailabilityDto } from './dto/courtavailability.dto';
 import { CourtMediaDto } from './dto/court_media.dto';
 import { updateCourtAvailabilityDto } from './dto/updatecourtavailability.dto';
+import { PaginationDto } from 'src/booking/dto/pagination.dto';
 
 
 @Injectable()
@@ -58,9 +59,16 @@ export class CourtService {
 
       
 
-    async get_Courts(){
-      try {
-        return this.prisma.court.findMany();      
+    async get_Courts(dto : PaginationDto) {
+      const { page = 1, limit = 10 } = dto;
+      const skip = (page - 1) * limit;
+          try {
+        return this.prisma.court.findMany(
+          {
+            skip,
+            take : limit,
+          }
+        );      
       } catch (error) {
         throw new InternalServerErrorException('Failed to get courts',error.message);        
       }

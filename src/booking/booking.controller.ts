@@ -10,6 +10,7 @@ import { CreateBookingDto } from './dto/createbooking.dto';
 import { UpdateBookingDto } from './dto/updatebooking.dto';
 import { BookingFiltersDto } from './dto/bookingfilter.dto';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { PaginationDto } from './dto/pagination.dto';
 
 @ApiTags('Bookings')
 @Controller('booking')
@@ -36,8 +37,8 @@ export class BookingController {
   @Roles('admin')
   @UseGuards(AuthGuard('jwt'),RolesGuard)
   @Get('get_all_bookings')
-  async getBookings() {
-    return this.bookingService.get_all_Bookings( );
+  async getBookings(@Query() dto: PaginationDto) {
+    return this.bookingService.get_all_Bookings(dto);
   }
 
   @ApiOperation({ summary: 'Update an existing booking' })

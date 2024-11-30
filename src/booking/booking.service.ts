@@ -12,6 +12,7 @@ import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
+import { PaginationDto } from './dto/pagination.dto';
 
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
@@ -113,9 +114,16 @@ export class BookingService {
     
     
     // Multiple Functions Required
-   async  get_all_Bookings() {
-        const bookings = await this.prisma.booking.findMany(
+   async  get_all_Bookings(dto:PaginationDto) {
+    const { page = 1, limit = 10 } = dto;
+    const skip = (page - 1) * limit;
+
+  
+        try {
+          const bookings = await this.prisma.booking.findMany(
             {
+              skip,
+              take: limit,
                 include: {
                     slot: true,
                     user: true,
@@ -126,6 +134,9 @@ export class BookingService {
             }
         );
         return bookings;
+        } catch (error) {
+          throw new InternalServerErrorException('Failed to fetch bookings', error.message);
+        }
     }
 
     

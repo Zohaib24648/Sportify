@@ -3,6 +3,7 @@ import { SignupDto } from 'src/auth/dto';
 import { AuthService } from 'src/auth/auth.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateUserDto } from './dto/updateuser.dto';
+import * as argon from 'argon2';
 
 @Injectable()
 export class AdminService {
@@ -29,7 +30,9 @@ export class AdminService {
     }
 }
 async updateUser(id: string, dto: UpdateUserDto) {
-        
+    if(dto.password_hash){
+    dto.password_hash = await argon.hash(dto.password_hash);}
+        console.log(dto);
     try {
         return await this.prisma.user.update({
             where: {

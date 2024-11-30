@@ -30,5 +30,5 @@ export class UpdateUserDto{
     @ApiProperty({ description: 'The user\'s password', example : "password" })
     @IsNotEmpty()
     @IsString()
-    password: string;
+    password_hash: string;
 }

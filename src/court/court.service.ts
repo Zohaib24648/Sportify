@@ -1,11 +1,13 @@
 //court/court.service.ts
 
 import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import { DAY, Prisma } from '@prisma/client';
+import { DAY,MEDIA_TYPE, Prisma } from '@prisma/client';
 import { CourtDto } from '../court/dto/court.dto';
 import { CourtSpecDto } from '../court/dto/court_spec.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { CourtAvailabilityDto } from './dto/courtavailability.dto';
+import { CourtMediaDto } from './dto/court_media.dto';
+import { updateCourtAvailabilityDto } from './dto/updatecourtavailability.dto';
 
 
 @Injectable()
@@ -205,13 +207,9 @@ export class CourtService {
             
 
 
-      async updateCourtAvailability(id: string, dto: CourtAvailabilityDto) {
-        const { day, start_time, end_time } = dto;
+      async updateCourtAvailability(id: string, dto: updateCourtAvailabilityDto) {
+        const { start_time, end_time } = dto;
       
-        // Validate day, start_time, and end_time
-        if (!Object.values(DAY).includes(day)) {
-          throw new BadRequestException(`Invalid day: ${day}`);
-        }
 
         if (start_time >= end_time) {
           throw new BadRequestException('Start time must be before end time');
@@ -222,7 +220,7 @@ export class CourtService {
           if (!availability) {
             throw new NotFoundException(`Availability with ID ${id} not found`);
           }
-          const { court_id } = availability;
+          const { court_id,day } = availability;
           // Check for overlapping availabilities on the same day, excluding the current availability
           const overlappingAvailabilities = await this.prisma.court_Availability.findMany({
             where: {
@@ -318,9 +316,43 @@ export class CourtService {
     }
     
 
-    }      
+
+
+    addCourtMedia(dto : CourtMediaDto) {
+      const { court_id, media_type, media_link } = dto;
+      return this.prisma.court_Media.create({
+        data: {
+          court_id,
+          media_link,
+          media_type,
+        },
+      });
+
+    }
+
+    deleteCourtMedia(id: string) {
+      try {
+        return this.prisma.court_Media.delete({
+          where: { id },
+        });
+      }
+       catch (error) {
+        throw new InternalServerErrorException('Failed to delete court media', error.message);
+      }
+  }
+
+    getCourtMedia(court_id: string) {
+      try {
+        return this.prisma.court_Media.findMany({
+          where: { court_id },
+        });
+      } catch (error) {
+        throw new InternalServerErrorException('Failed to retrieve court media', error.message);
+      }
+    }
+}
+
 
             
-
 
 

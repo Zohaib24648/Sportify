@@ -10,6 +10,8 @@ import { ROLE } from '@prisma/client';
 import { CourtSpecDto } from '../court/dto/court_spec.dto';
 import { CourtAvailabilityDto } from './dto/courtavailability.dto';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { CourtMediaDto } from './dto/court_media.dto';
+import { updateCourtAvailabilityDto } from './dto/updatecourtavailability.dto';
 
 
 @ApiTags('Courts')
@@ -20,7 +22,6 @@ export class CourtController {
     
     
     //Create Court
-    
     @ApiOperation({ summary: 'Create a new court' })
     @ApiResponse({ status: 400, description: 'Request data error , ' })
     @ApiResponse({ status: 500, description: 'Undefined Error , ' })
@@ -106,7 +107,7 @@ export class CourtController {
     @Roles('admin')
     @UseGuards(AuthGuard('jwt'),RolesGuard)
     @Put('update_court_availability/:id')
-    updateCourtAvailability(@Param('id') id:string, @Body() dto:CourtAvailabilityDto){
+    updateCourtAvailability(@Param('id') id:string, @Body() dto:updateCourtAvailabilityDto){
         return this.court_service.updateCourtAvailability(id,dto);
     }
 
@@ -188,5 +189,36 @@ export class CourtController {
       update_court_specs(@Param('id') id:string, @Body() dto:CourtSpecDto){
           return this.court_service.update_court_spec(id,dto);
       }
+
+
+
+      @ApiOperation({ summary: 'Add media to a court' })
+      @ApiBearerAuth()
+      @Roles('admin')
+      @UseGuards(AuthGuard('jwt'),RolesGuard)
+      @Post('add_court_media')
+      add_court_media(@Body() dto:CourtMediaDto){
+          return this.court_service.addCourtMedia(dto);
+      }
+
+      @ApiOperation({ summary: 'deletes media from a court' })
+      @ApiBearerAuth()
+      @Roles('admin')
+      @UseGuards(AuthGuard('jwt'),RolesGuard)
+      @Delete('delete_court_media/:id')
+      delete_court_media(@Param('id') id:string){
+          return this.court_service.deleteCourtMedia(id);
+      }
+
+      @ApiOperation({ summary: 'get media of a court' })
+      @ApiBearerAuth()
+      @Roles('admin')
+      @UseGuards(AuthGuard('jwt'),RolesGuard)
+      @Get('get_court_media/:id')
+      get_court_media(@Param('id') id:string){
+        return this.court_service.getCourtMedia(id);
+        }
+
+
 
 }

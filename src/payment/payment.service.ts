@@ -155,19 +155,21 @@ async getPayments() {
 
 
         async uploadPaymentImage(dto: PImageDto) {
-            const { booking_id, image } = dto;
-        
-            // Update the payment record
-            const payment = await this.prisma.payment.update({
-                where: { id : booking_id }, // Match the primary key
-                data: { 
-                    payment_image_link: image, 
-                    payment_status: 'verification_pending' // Update the status
-                },
-            });
-        
-            console.log('Payment updated successfully:', payment);
-            return payment;
+            const { payment_id, image } = dto;
+        try {
+          
+          // Update the payment record
+          return await this.prisma.payment.update({
+              where: { id : payment_id }, // Match the primary key
+              data: { 
+                  payment_image_link: image, 
+                  payment_status: 'verification_pending' // Update the status
+              },
+          });
+        } catch (error) {
+          
+          throw new InternalServerErrorException('Failed to upload payment image', error.message);
+        }
         }
         
 

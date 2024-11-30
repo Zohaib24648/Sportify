@@ -4,6 +4,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { UserSearchDto } from './dto/usersearch.dto';
 import { UserService } from './user.service';
 import { RolesGuard } from 'src/auth/guard/roles.guard';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('users')
 export class UserController {
@@ -17,8 +18,8 @@ export class UserController {
 
 
   }
-
-  @Get('me')
+  @ApiBearerAuth()
+  @Get('me')      
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async getMe(@Req() req) {
     const dto = req.user;
@@ -26,13 +27,15 @@ export class UserController {
        
   }
 
+  @ApiBearerAuth()
   @Get('bookingHistory')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async getBookingHistory(@Req() req) {
     const dto = req.user;
     return this.userService.getBookingHistory(dto);
   }
-
+  
+  @ApiBearerAuth()
   @Get('paymentHistory')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async getPaymentHistory(@Req() req) {

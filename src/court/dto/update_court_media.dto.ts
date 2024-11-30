@@ -5,15 +5,6 @@ import { IsEnum, IsNotEmpty } from "class-validator";
 export class UpdateCourtMediaDto {
     //court_id: string, media_link: string , media_type: MEDIA_TYPE
 
-    @ApiProperty(
-        {
-            description: 'The id of the media',
-            example: 'a950cc41-b351-4663-b2b7-feacf3bfabb5',
-        })
-    @IsNotEmpty()
-    id: string;
-    
-
 
     @ApiProperty({
         description: 'The link to the media',

@@ -332,8 +332,8 @@ export class CourtService {
     }
 
 
-    updateCourtMedia(dto : UpdateCourtMediaDto) {
-      const { id, media_type, media_link } = dto;
+    updateCourtMedia(id: string, dto : UpdateCourtMediaDto) {
+      const { media_type, media_link } = dto;
       return this.prisma.court_Media.update({
         where: { id },
         data: {

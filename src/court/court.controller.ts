@@ -225,9 +225,9 @@ export class CourtController {
         @ApiBearerAuth()
         @Roles('admin')
         @UseGuards(AuthGuard('jwt'),RolesGuard)
-        @Post('update_court_media')
-        update_court_media(@Body() dto : UpdateCourtMediaDto){
-          return this.court_service.updateCourtMedia(dto);
+        @Post('update_court_media/:id')
+        update_court_media(@Param('id') id:string,  @Body() dto : UpdateCourtMediaDto){
+          return this.court_service.updateCourtMedia(id, dto);
           }
 
 

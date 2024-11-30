@@ -12,6 +12,7 @@ import { CourtAvailabilityDto } from './dto/courtavailability.dto';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CourtMediaDto } from './dto/court_media.dto';
 import { updateCourtAvailabilityDto } from './dto/updatecourtavailability.dto';
+import { UpdateCourtMediaDto } from './dto/update_court_media.dto';
 
 
 @ApiTags('Courts')
@@ -212,12 +213,22 @@ export class CourtController {
 
       @ApiOperation({ summary: 'get media of a court' })
       @ApiBearerAuth()
-      @Roles('admin')
+      @Roles('admin','user')
       @UseGuards(AuthGuard('jwt'),RolesGuard)
       @Get('get_court_media/:id')
       get_court_media(@Param('id') id:string){
         return this.court_service.getCourtMedia(id);
         }
+
+
+        @ApiOperation({ summary: 'update media of a court , takes media.id as input' })
+        @ApiBearerAuth()
+        @Roles('admin')
+        @UseGuards(AuthGuard('jwt'),RolesGuard)
+        @Post('update_court_media')
+        update_court_media(@Body() dto : UpdateCourtMediaDto){
+          return this.court_service.updateCourtMedia(dto);
+          }
 
 
 

@@ -57,7 +57,7 @@ export class BookingService {
         const slot = await this.slotService.createSlot(slotdto);
         const totalAmount = await this.calculateTotalAmount(slotdto);
       
-       await this.prisma.booking.create({
+       return await this.prisma.booking.create({
           data: {
             user_id,
             slot_id: slot.id,

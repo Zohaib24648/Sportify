@@ -30,6 +30,12 @@ enum DAY {
   sunday
 }
 
+enum MEDIA_TYPE {
+  image
+  video
+  audio
+}
+
 enum REVIEW_STATUS {
   pending
   approved
@@ -122,10 +128,11 @@ model Court_Specs {
 }
 
 model Court_Media {
-  id         String @id @default(uuid())
+  id         String     @id @default(uuid())
   court_id   String
   media_link String
-  court      Court  @relation(fields: [court_id], references: [id])
+  media_type MEDIA_TYPE
+  court      Court      @relation(fields: [court_id], references: [id])
 }
 
 model Court_Availability {

@@ -3,15 +3,16 @@ import { IsNotEmpty, IsString, IsUrl } from "class-validator";
 
 export class PImageDto {
     
-    @ApiProperty({ description: 'The booking ID related to the payment', example: 'booking1234' })
+    @ApiProperty({ description: 'The payment ID related to the payment', example: 'booking1234' })
     @IsString()
     @IsNotEmpty()
-    booking_id: string;
+    payment_id: string;
     
     
 
     @ApiProperty({ description: 'The URL of the payment receipt image', example: 'http://example.com/receipt.jpg' })
-    // @IsNotEmpty()
+    @IsString()
+    @IsNotEmpty()
     // @IsUrl()
     image: string;
 }

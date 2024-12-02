@@ -58,7 +58,7 @@ export class BookingService {
         const slot = await this.slotService.createSlot(slotdto);
         const totalAmount = await this.calculateTotalAmount(slotdto);
       
-       return await this.prisma.booking.create({
+       const booking_details = await this.prisma.booking.create({
           data: {
             user_id,
             slot_id: slot.id,
@@ -69,6 +69,7 @@ export class BookingService {
             updated_at: new Date(),
           },
         });
+        return booking_details;
       });
     } catch (error) {
       throw new InternalServerErrorException('Error creating booking', error.message);
@@ -263,7 +264,7 @@ if (start_time || end_time) {
           ];
         }
     
-        // Execute query with pagination
+        // Execute query
         return await this.prisma.booking.findMany({
           where,
           include: {

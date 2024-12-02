@@ -9,11 +9,14 @@ import { PaymentService } from 'src/payment/payment.service';
 import { MailService } from 'src/mail/mail.service';
 
 @Module({
-  providers: [BookingService,JwtService,CourtService,SlotService,PaymentService,MailService],
-  controllers: [BookingController]
+  providers: [
+    BookingService,
+    JwtService,
+    CourtService,
+    SlotService,
+    PaymentService,
+    MailService,
+  ],
+  controllers: [BookingController],
 })
 export class BookingModule {}
-
-  
-
-

@@ -12,11 +12,22 @@ import { GameModule } from './game/game.module';
 import { AdminModule } from './admin/admin.module';
 import { MailModule } from './mail/mail.module';
 
-
 @Module({
-  imports: [AuthModule, UserModule, PrismaModule, ConfigModule.forRoot({
-    isGlobal: true,
-    envFilePath: '.env',
-  }), CourtModule, BookingModule, PaymentModule, SlotModule, GameModule, AdminModule, MailModule],
+  imports: [
+    AuthModule,
+    UserModule,
+    PrismaModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
+    CourtModule,
+    BookingModule,
+    PaymentModule,
+    SlotModule,
+    GameModule,
+    AdminModule,
+    MailModule,
+  ],
 })
 export class AppModule {}

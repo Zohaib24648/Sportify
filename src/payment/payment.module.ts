@@ -9,6 +9,12 @@ import { MailService } from 'src/mail/mail.service';
 
 @Module({
   controllers: [PaymentController],
-  providers: [PaymentService,CourtService,SlotService,BookingService,MailService],
+  providers: [
+    PaymentService,
+    CourtService,
+    SlotService,
+    BookingService,
+    MailService,
+  ],
 })
 export class PaymentModule {}

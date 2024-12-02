@@ -14,5 +14,4 @@ export class MailController {
   ) {
     return await this.mailService.sendEmail(to, subject, content);
   }
-
 }

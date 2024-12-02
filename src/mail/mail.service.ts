@@ -15,7 +15,9 @@ export class MailService {
       });
       return 'Email sent successfully';
     } catch (error) {
-        throw new InternalServerErrorException(`Failed to send email: ${error.message}`);
+      throw new InternalServerErrorException(
+        `Failed to send email: ${error.message}`,
+      );
     }
   }
 }

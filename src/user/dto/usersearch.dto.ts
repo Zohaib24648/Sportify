@@ -1,3 +1,3 @@
 export class UserSearchDto {
-    searchTerm: string;
-  }
+  searchTerm: string;
+}

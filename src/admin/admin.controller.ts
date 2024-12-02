@@ -6,6 +6,7 @@ import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { Roles } from 'src/auth/guard/roles.decorator';
 import { UpdateUserDto } from './dto/updateuser.dto';
 import { ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { TimeDto } from 'src/slot/dto/time.dto';
 
 @Controller('admin')
 export class AdminController {
@@ -47,6 +48,16 @@ createUser(@Body() dto: SignupDto) {
             @Get('get_users')
             getUser() {
                 return this.admin_service.getUsers();}
+
+
+                @ApiOperation({ summary: 'Retrieve Dashboard Data' })
+                @ApiBearerAuth()
+                @Roles('admin')
+                @UseGuards(AuthGuard('jwt'),RolesGuard)
+                @Post('dashboard')
+                getdashboard(@Body() dto: TimeDto) {
+                    return this.admin_service.getDashboardData(dto);}
+                
             
 
 }

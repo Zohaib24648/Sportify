@@ -223,114 +223,74 @@ async getBookingDetails(id: string) {
 
 
 
+    // booking.service.ts
     async getBookingsWithFilters(filters: BookingFiltersDto) {
-        try {
-          const { start_time, end_time, status, gameTypes, courtTypes, searchTerm } = filters;
-      
+      try {
+        const { start_time, end_time, status, searchTerm } = filters;
+        console.log(filters);
+    
+        // Build the where clause
         const where: Prisma.BookingWhereInput = {};
-      
-        // Filter by booking status
+        //Working
+        // Status filter
         if (status) {
           where.status = status as BOOKING_STATUS;
         }
-      
-        // Filter by date range
-        // Filter by date range
-        if (start_time || end_time) {
-        where.slot = {
-          start_time: {
-            ...(start_time && { gte: start_time.toISOString() }),
-            ...(end_time && { lte: end_time.toISOString() }),
-          },
-        } as Prisma.SlotWhereInput;
+//Working
+// Date range filter
+if (start_time || end_time) {
+  where.slot = where.slot || {};
+
+  const filterStartTime = start_time 
+    ? dayjs.tz(start_time, 'Asia/Karachi').format('YYYY-MM-DDTHH:mm:ss')
+    : undefined;
+
+  const filterEndTime = end_time
+    ? dayjs.tz(end_time, 'Asia/Karachi').format('YYYY-MM-DDTHH:mm:ss')
+    : undefined;
+
+  where.slot.start_time = {
+    ...(filterStartTime && { gte: filterStartTime }),
+    ...(filterEndTime && { lte: filterEndTime })
+  };
 }
-        // Filter by game types
-        if (gameTypes) {
-          where.slot = where.slot || {};
-          where.slot.court = {
-            game_types: {
-              some: {
-                game_type: {
-                  name: gameTypes,
-                },
-              },
-            },
-          } as Prisma.CourtWhereInput;
+        // Search term filter
+        if (searchTerm) {
+          where.OR = [
+            { id: { contains: searchTerm, mode: 'insensitive' } },
+            { user: { name: { contains: searchTerm, mode: 'insensitive' } } },
+            { slot: { court: { name: { contains: searchTerm, mode: 'insensitive' } } } }
+          ];
         }
-      
-        // Filter by court types
-        if (courtTypes && courtTypes.length > 0) {
-          where.slot = where.slot || {};
-          where.slot.court = {
-            ...where.slot.court,
-            court_specs: {
-              some: {
-                name: {
-                  in: courtTypes,
-                },
-              },
-            },
-          } as Prisma.CourtWhereInput;
-        }
-      
-        console.log('Where clause:', where);
-      
-        // Execute query
+    
+        // Execute query with pagination
         return await this.prisma.booking.findMany({
           where,
           include: {
             slot: {
               include: {
                 court: {
-                    include: {
-                        court_specs: true,
-                        game_types: {
-                            include: {
-                                game_type: true
-                            }
-                        }
-                    },
+                  include: {
+                    court_specs: true,
+                    game_types: {
+                      include: {
+                        game_type: true
+                      }
+                    }
+                  }
                 }
-              },
+              }
             },
             user: true,
-            payment: true,
+            payment: true
           },
+          orderBy: {
+            created_at: 'desc'
+          }
         });
-
-        } catch (error) {
-          throw new BadRequestException('Failed to fetch bookings', error.message);
-        }
+      } catch (error) {
+        throw new BadRequestException('Failed to fetch bookings', error.message);
       }
-      
-
-async searchBookings(searchTerm: string) {
-try {
-  const bookings = await this.prisma.booking.findMany({
-    where: {
-      OR: [
-        { id: { contains: searchTerm, mode: 'insensitive' } },
-        {
-          user: {
-            name: { contains: searchTerm, mode: 'insensitive' },
-          },
-        }
-      ],
-    },
-    include: {
-      slot: {
-        include: {
-          court: true,
-        },
-      },
-      user: true,
-      payment: true,
-    },
-  });
-  return bookings;
-} catch (error) {
-throw new BadRequestException('Failed to search bookings', error.message);  
-}
-}
+    } 
   
   }

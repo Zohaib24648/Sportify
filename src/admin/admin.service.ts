@@ -4,6 +4,8 @@ import { AuthService } from 'src/auth/auth.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateUserDto } from './dto/updateuser.dto';
 import * as argon from 'argon2';
+import { TimeDto } from 'src/slot/dto/time.dto';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class AdminService {
@@ -55,5 +57,83 @@ async getUsers() {
 }
 
 
+
+
+//Dashboard Apis 
+
+async getbookingcount (dto : TimeDto) {
+    const {start_time,end_time} = dto;
+    
+    const total_bookings_count = await this.prisma.booking.count(
+        {
+            where: {
+             slot: {
+                    start_time: {
+                        gte: start_time,
+                        lte: end_time
+                    },
+                }
+            }
+        }
+    );
+
+    return total_bookings_count;
+}
+
+
+
+
+
+async getDashboardData(dto :TimeDto) {
+
+const {start_time,end_time} = dto;
+
+
+const total_bookings_count = await this.getbookingcount(dto);
+const total_users = await this.prisma.user.count();
+
+const total_bookings = await this.prisma.booking.findMany(
+    {
+        select: {
+            booking_id : true,
+            total_amount: true,
+            paid_amount: true,
+            status: true,        
+        },
+        
+        
+        
+            where: {
+         slot: {
+                start_time: {
+                    gte: start_time,
+                    lte: end_time
+                },
+            }
+        }
+    }
+);
+
+//calculate total_amount of bookings with status != cancelled
+//calculate total_paid_amount of bookings with status != cancelled
+
+let total_amount = 0;
+let total_paid_amount = 0;
+for (const booking of total_bookings) {
+    if(booking.status !== 'cancelled') {
+        total_amount += booking.total_amount;
+        total_paid_amount += booking.paid_amount;
+    }
+}
+
+return {
+    total_bookings_count,
+    total_users,
+    total_amount,
+    total_paid_amount,
+    total_bookings
+};
+
+}
 
 }

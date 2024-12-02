@@ -95,12 +95,19 @@ const total_users = await this.prisma.user.count();
 const total_bookings = await this.prisma.booking.findMany(
     {
         select: {
+            id: true,
             booking_id : true,
             total_amount: true,
             paid_amount: true,
-            status: true,        
-        },
-        
+            status: true,
+            slot: true,
+            user: {
+                select: {
+                    name: true,
+                    user_phone: true
+            },
+
+        },  },
         
         
             where: {
@@ -113,9 +120,6 @@ const total_bookings = await this.prisma.booking.findMany(
         }
     }
 );
-
-//calculate total_amount of bookings with status != cancelled
-//calculate total_paid_amount of bookings with status != cancelled
 
 let total_amount = 0;
 let total_paid_amount = 0;

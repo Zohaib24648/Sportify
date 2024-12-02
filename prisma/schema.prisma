@@ -66,9 +66,11 @@ enum PAYMENT_METHOD {
 
 model User {
   id                   String    @id @default(uuid())
-  user_id              Int       @default(autoincrement())
+  user_id              Int       @unique @default(autoincrement())
   name                 String
   email                String    @unique
+  email_verified       Boolean   @default(false)
+  phone_verified       Boolean   @default(false)
   password_hash        String
   user_pfp_link        String    @default("https://www.shutterstock.com/shutterstock/photos/1677509740/display_1500/stock-vector-default-avatar-profile-icon-social-media-user-vector-1677509740.jpg")
   user_phone           String    @unique
@@ -81,11 +83,12 @@ model User {
 
   @@index([email])
   @@index([user_phone])
+  @@index([user_id])
 }
 
 model Court {
   id                 String               @id @default(uuid())
-  court_id           Int                  @default(autoincrement())
+  court_id           Int                  @unique @default(autoincrement())
   name               String
   description        String?
   court_location     String

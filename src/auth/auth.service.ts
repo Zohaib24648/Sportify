@@ -32,7 +32,7 @@ export class AuthService{
                     secondary_user_phone:secondary_user_phone,
                 }
             })
-            return this.signToken(user.id,user.email,user.role);
+            return this.signToken(user.id,user.email,user.role,"10d");
 
         }
         catch (error) {
@@ -47,6 +47,37 @@ export class AuthService{
     }
 
 
+async verifyUser(token: string) {
+    try {
+      // Decode the token to get the payload
+      const payload = this.jwt.verify(token, {
+        secret: process.env.JWT_SECRET,
+      });
+
+      // Extract the user ID from the payload
+      const userId = payload.sub;
+      // console.log(userId);
+
+      // Find the user in the database
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      // Update the user's email verification status
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { email_verified: true },
+      });
+
+      return { message: 'User verified successfully' };
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to verify user',error.message);
+    }
+  }
 
     async signin(req: SigninDto) {
         try {
@@ -65,7 +96,7 @@ export class AuthService{
           throw new UnauthorizedException('Invalid email or password');
         }
       
-        return this.signToken(user.id, user.email, user.role);
+        return this.signToken(user.id, user.email, user.role,"10d");
 
         } catch (error) {
           throw new InternalServerErrorException('Failed to sign in', error.message);
@@ -74,11 +105,11 @@ export class AuthService{
       }
       
 
-    async signToken(userid: string, email: string, role: string[]): Promise<{ access_token: string }> {
+    async signToken(userid: string, email: string, role: string[],expirytime:string): Promise<{ access_token: string }> {
         try {
           const payload = { sub: userid, email,role };
         const token = await this.jwt.signAsync(payload, {
-            expiresIn: "10d",
+            expiresIn: expirytime,
             secret: process.env.JWT_SECRET,
         });
         return {

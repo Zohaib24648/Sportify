@@ -13,6 +13,7 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import { PaginationDto } from './dto/pagination.dto';
+import { MailService } from 'src/mail/mail.service';
 
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
@@ -27,7 +28,7 @@ dayjs.tz.setDefault('Asia/Karachi');
 
 @Injectable()
 export class BookingService {
-    constructor(private readonly prisma: PrismaService, private readonly courtService: CourtService,private readonly slotService: SlotService) {}
+    constructor(private readonly prisma: PrismaService, private readonly courtService: CourtService,private readonly slotService: SlotService,private readonly mailService: MailService) {}
 
     
 
@@ -69,6 +70,11 @@ export class BookingService {
             updated_at: new Date(),
           },
         });
+        const email = await this.prisma.user.findUnique({
+          where: { id: user_id },
+          select: { email: true },
+        });
+        await this.mailService.sendEmail(email.email, 'Booking Confirmation', 'Your booking has been confirmed');
         return booking_details;
       });
     } catch (error) {

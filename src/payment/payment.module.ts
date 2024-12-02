@@ -5,9 +5,10 @@ import { PaymentService } from './payment.service';
 import { CourtService } from 'src/court/court.service';
 import { SlotService } from 'src/slot/slot.service';
 import { BookingService } from 'src/booking/booking.service';
+import { MailService } from 'src/mail/mail.service';
 
 @Module({
   controllers: [PaymentController],
-  providers: [PaymentService,CourtService,SlotService,BookingService],
+  providers: [PaymentService,CourtService,SlotService,BookingService,MailService],
 })
 export class PaymentModule {}

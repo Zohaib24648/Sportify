@@ -101,7 +101,7 @@ model Court {
   court_location     String
   hourly_rate        Int
   min_down_payment   Int
-  court_type         COURT_TYPE
+  court_type         COURT_TYPE           @default(outdoor)
   created_at         DateTime             @default(now())
   updated_at         DateTime             @updatedAt
   court_specs        Court_Specs[]

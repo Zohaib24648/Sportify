@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { COURT_TYPE } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 //auth/dto/court.dto.ts
 export class CourtDto {
@@ -12,6 +13,15 @@ export class CourtDto {
   @IsString()
   @IsNotEmpty()
   name: string;
+
+  @ApiProperty({
+  description: 'The Type of court',
+  example: COURT_TYPE,
+  required: true,
+})
+@IsEnum(COURT_TYPE, { message: 'Invalid court type' })
+court_type: COURT_TYPE;
+
 
   @ApiProperty({
     description: 'A description of the court',

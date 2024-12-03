@@ -16,6 +16,7 @@ import { CourtMediaDto } from './dto/court_media.dto';
 import { updateCourtAvailabilityDto } from './dto/updatecourtavailability.dto';
 import { UpdateCourtMediaDto } from './dto/update_court_media.dto';
 import { PaginationDto } from 'src/booking/dto/pagination.dto';
+import { CreateCourtDto } from './dto/create-court.dto';
 
 @Injectable()
 export class CourtService {
@@ -30,42 +31,48 @@ export class CourtService {
     }
   }
 
-  async createCourt(dto: CourtDto) {
-    const { name } = dto;
-
-    this.validateCourtData(dto);
+  async createCourt(createCourtDto: CreateCourtDto) {
+    const { availability, ...courtData } = createCourtDto;
+    this.validateCourtData(courtData);
 
     try {
-      const existingCourt = await this.prisma.court.findFirst({
-        where: { name },
+      const court = await this.prisma.court.create({
+        data: courtData,
       });
 
-      if (existingCourt) {
-        throw new ConflictException('Court with this name already exists');
+      for (const item of availability) {
+        await this.prisma.court_Availability.create({
+          data: {
+            court_id: court.id,
+            day: item.day,
+            start_time: item.start_time,
+            end_time: item.end_time,
+          },
+        });
       }
 
-      return this.prisma.court.create({
-        data: dto,
+      return court;
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to create court', error.message);
+    }
+  }
+
+  async get_all_Courts() {
+    try {
+      return this.prisma.court.findMany({
       });
     } catch (error) {
-      if (error instanceof ConflictException) {
-        throw error;
-      }
-
       throw new InternalServerErrorException(
-        'Failed to create court',
+        'Failed to get courts',
         error.message,
       );
     }
   }
 
-  async get_Courts(dto: PaginationDto) {
-    const { page = 1, limit = 10 } = dto;
-    const skip = (page - 1) * limit;
+  async get_Courts() {
     try {
       return this.prisma.court.findMany({
-        skip,
-        take: limit,
+        where: { is_deleted: false },
       });
     } catch (error) {
       throw new InternalServerErrorException(
@@ -131,15 +138,17 @@ export class CourtService {
   }
 
   //Not Correct
-
-  async deleteCourt(id: string): Promise<string> {
+  async deleteCourt(id: string){
     try {
       const court = await this.prisma.court.findUnique({ where: { id } });
       if (!court) {
         throw new NotFoundException(`Court with ID ${id} not found`);
       }
 
-      await this.prisma.court.delete({ where: { id } });
+      await this.prisma.court.update({ 
+        where: { id },
+        data : { is_deleted: true }
+      });
       return 'Court deleted successfully';
     } catch (error) {
       if (

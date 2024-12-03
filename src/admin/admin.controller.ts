@@ -21,7 +21,7 @@ import { TimeDto } from 'src/slot/dto/time.dto';
 export class AdminController {
   constructor(private admin_service: AdminService) {}
 
-  @ApiOperation({ summary: 'Create a new user' })
+  @ApiOperation({ summary: 'Create a new user (Admin Only)' })
   @ApiBearerAuth()
   @Roles('admin')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -30,7 +30,7 @@ export class AdminController {
     return this.admin_service.createUser(dto);
   }
 
-  @ApiOperation({ summary: 'update an existing user' })
+  @ApiOperation({ summary: 'update an existing user(Admin Only)' })
   @ApiBearerAuth()
   @Roles('admin')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -39,7 +39,7 @@ export class AdminController {
     return this.admin_service.updateUser(id, dto);
   }
 
-  @ApiOperation({ summary: 'delete a  user' })
+  @ApiOperation({ summary: 'delete a  user (Admin Only)' })
   @ApiBearerAuth()
   @Roles('admin')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -48,7 +48,7 @@ export class AdminController {
     return this.admin_service.deleteUser(id);
   }
 
-  @ApiOperation({ summary: 'Retrieve a list of users' })
+  @ApiOperation({ summary: 'Retrieve a list of users (Admin Only)' })
   @ApiBearerAuth()
   @Roles('admin')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -57,7 +57,7 @@ export class AdminController {
     return this.admin_service.getUsers();
   }
 
-  @ApiOperation({ summary: 'Retrieve Dashboard Data' })
+  @ApiOperation({ summary: 'Retrieve Dashboard Data (Admin Only)' })
   @ApiBearerAuth()
   @Roles('admin')
   @UseGuards(AuthGuard('jwt'), RolesGuard)

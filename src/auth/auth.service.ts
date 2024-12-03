@@ -13,12 +13,15 @@ import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { SigninDto } from './dto/signin.dto';
 import { SignupDto } from './dto/signup.dto';
+import { MailService } from 'src/mail/mail.service';
+import { ResetPassDto } from './dto/resetpass.dto';
 
 @Injectable({})
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
+    private mailService: MailService,
   ) {}
 
   async signup(dto: SignupDto) {
@@ -38,7 +41,9 @@ export class AuthService {
           secondary_user_phone: secondary_user_phone,
         },
       });
-      return this.signToken(user.id, user.email, user.role, '30m');
+      await this.sendVerificationEmail(user.id, user.email, user.role);
+
+      return { message: 'User created successfully, and Verification Mail Sent' };
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         // Handle unique constraint violation
@@ -52,6 +57,34 @@ export class AuthService {
       );
     }
   }
+
+
+  async sendVerificationEmail(id: string, email: string, role: ROLE[]) {
+    const signed_token = await this.signToken(id, email, role, '30m');
+    const token = signed_token.access_token;
+
+    const link_to_verify = `${process.env.VERIFY_USER_URL}/${token}`;
+    console.log(link_to_verify);   
+    return await this.mailService.sendEmail(
+      email,
+      'Verify your email',
+      link_to_verify,
+    )
+
+}
+
+
+  async resendVerificationEmail(email:string){
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    this.sendVerificationEmail(user.id, user.email, user.role);
+    return { message: 'Verification email sent successfully'
+
+  }}
 
   async verifyUser(token: string) {
     try {
@@ -105,6 +138,11 @@ export class AuthService {
         throw new UnauthorizedException('Invalid email or password');
       }
 
+      const user_verified = user.email_verified;
+      if (!user_verified) {
+        throw new UnauthorizedException('Email not verified');
+      }
+
       return this.signToken(user.id, user.email, user.role, '10d');
     } catch (error) {
       throw new InternalServerErrorException(
@@ -117,7 +155,7 @@ export class AuthService {
   async signToken(
     userid: string,
     email: string,
-    role: string[],
+    role: ROLE[],
     expirytime: string,
   ): Promise<{ access_token: string }> {
     try {
@@ -155,5 +193,43 @@ export class AuthService {
       },
     });
     return { message: 'Password changed successfully' };
+  }
+
+
+  async  forgotPassword(email: string) {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const token = await this.signToken(user.id, user.email, user.role, '30m');
+    const link_to_reset = `${process.env.RESET_PASSWORD_URL}/${token.access_token}`;
+    return this.mailService.sendEmail(
+      email,
+      'Reset Password',
+      link_to_reset,
+    );
+  }
+
+  async resetPassword(dto : ResetPassDto) {
+    const { token, new_password} = dto;
+    const payload = this.jwt.verify(token, {
+      secret: process.env.JWT_SECRET,
+    });
+    const userId = payload.sub;
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const hash = await argon.hash(new_password);
+    await this.prisma.user.update({
+    where: { id: user.id },
+      data: {
+        password_hash: hash,
+      },
+    });
+    return { message: 'Password reset successfully' };
   }
 }

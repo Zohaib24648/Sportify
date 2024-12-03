@@ -5,6 +5,7 @@ export class updateCourtAvailabilityDto {
   @ApiProperty({
     description: 'The start time of the availability in HH:mm format',
     example: '09:00',
+    required: true,
   })
   @IsString()
   @IsNotEmpty()
@@ -14,6 +15,7 @@ export class updateCourtAvailabilityDto {
   @ApiProperty({
     description: 'The end time of the availability in HH:mm format',
     example: '17:00',
+    required: true,
   })
   @IsString()
   @IsNotEmpty()

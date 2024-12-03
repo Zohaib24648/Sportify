@@ -29,6 +29,7 @@ import { CourtMediaDto } from './dto/court_media.dto';
 import { updateCourtAvailabilityDto } from './dto/updatecourtavailability.dto';
 import { UpdateCourtMediaDto } from './dto/update_court_media.dto';
 import { PaginationDto } from 'src/booking/dto/pagination.dto';
+import { CreateCourtDto } from './dto/create-court.dto';
 
 @ApiTags('Courts')
 @Controller('court')
@@ -48,11 +49,11 @@ export class CourtController {
   @Roles('admin')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Post('create_court')
-  createCourt(@Body() dto: CourtDto) {
+  createCourt(@Body() dto: CreateCourtDto) {
     return this.court_service.createCourt(dto);
   }
 
-  @ApiOperation({ summary: 'Retrieve a list of courts' })
+  @ApiOperation({ summary: 'Retrieve a list of courts excluding deleted' })
   @ApiResponse({ status: 200, description: 'List of courts' })
   @ApiResponse({ status: 404, description: 'No courts found' })
   @ApiResponse({ status: 500, description: 'Undefined Error' })
@@ -62,9 +63,24 @@ export class CourtController {
   @Roles('admin', 'user')
   @UseGuards(AuthGuard('jwt'))
   @Get('get_courts')
-  getCourts(@Query() dto: PaginationDto) {
-    return this.court_service.get_Courts(dto);
+  getCourts() {
+    return this.court_service.get_Courts();
   }
+
+
+  @ApiOperation({ summary: 'Retrieve a list of courts including deleted' })
+  @ApiResponse({ status: 200, description: 'List of courts' })
+  @ApiResponse({ status: 404, description: 'No courts found' })
+  @ApiResponse({ status: 500, description: 'Undefined Error' })
+  @ApiBearerAuth()
+  //Get Courts
+  @Roles('admin', 'user')
+  @UseGuards(AuthGuard('jwt'))
+  @Get('get_all_courts')
+  getAllCourts() {
+    return this.court_service.get_all_Courts();
+  }
+
 
   @ApiOperation({ summary: 'Update a court by ID' })
   @ApiResponse({ status: 200, description: 'Court updated successfully' })

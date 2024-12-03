@@ -6,6 +6,7 @@ export class TimeDto {
   @ApiProperty({
     description: 'Start time of the slot in ISO 8601 format (without timezone)',
     example: '2024-11-27T08:00:00',
+    required: true,
   })
   @IsString()
   @IsNotEmpty()
@@ -18,6 +19,7 @@ export class TimeDto {
   @ApiProperty({
     description: 'End time of the slot in ISO 8601 format (without timezone)',
     example: '2024-11-27T09:00:00',
+    required: true,
   })
   @IsString()
   @IsNotEmpty()

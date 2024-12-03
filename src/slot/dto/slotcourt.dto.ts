@@ -1,12 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsDate, IsString } from 'class-validator';
-
+ 
 export class SlotCourtDto {
   @ApiProperty({
     description: 'The ID of the court',
     type: String,
-    example: 'court123',
+    required: true,
+    example: '4578e2f0-9eef-4507-9190-14a7a475faa6',
+
   })
   @IsString()
   court_id: string;

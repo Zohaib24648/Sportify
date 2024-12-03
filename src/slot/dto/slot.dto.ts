@@ -7,6 +7,7 @@ export class SlotDto extends TimeDto {
   @ApiProperty({
     description: 'The ID of the court',
     type: String,
+    required: true,
     example: 'court123',
   })
   @IsNotEmpty()

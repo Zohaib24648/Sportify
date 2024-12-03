@@ -85,11 +85,12 @@ model User {
   @@index([user_phone])
   @@index([user_id])
 }
-
+//outdoor , indoor , multiground
 model Court {
   id                 String               @id @default(uuid())
   court_id           Int                  @unique @default(autoincrement())
   name               String
+  is_deleted         Boolean              @default(false)
   description        String?
   court_location     String
   hourly_rate        Int

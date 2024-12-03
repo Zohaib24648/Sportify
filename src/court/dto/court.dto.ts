@@ -7,6 +7,7 @@ export class CourtDto {
   @ApiProperty({
     description: 'The name of the court',
     example: 'Main Court',
+    required: true,
   })
   @IsString()
   @IsNotEmpty()
@@ -24,6 +25,7 @@ export class CourtDto {
   @ApiProperty({
     description: 'The location of the court',
     example: 'Downtown',
+    required: true,
   })
   @IsString()
   @IsNotEmpty()
@@ -32,6 +34,7 @@ export class CourtDto {
   @ApiProperty({
     description: 'The hourly rate for using the court',
     example: 5000,
+    required: true,
   })
   @IsNumber()
   @IsNotEmpty()
@@ -41,6 +44,7 @@ export class CourtDto {
     description:
       'The minimum percentage down payment required to book the court',
     example: 30,
+    required: true,
   })
   @IsNumber()
   @IsNotEmpty()

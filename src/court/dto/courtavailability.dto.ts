@@ -8,6 +8,7 @@ export class CourtAvailabilityDto extends updateCourtAvailabilityDto {
     description: 'The day of the week for the availability',
     example: 'monday', // You can replace this with your enum values
     enum: DAY,
+    required: true,
   })
   @IsNotEmpty()
   day: DAY;

@@ -35,7 +35,7 @@ export class BookingController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Post('create_booking')
-  async createBooking(@Body() dto: CreateBookingDto) {
+  async createBooking( @Body() dto: CreateBookingDto) {
     return this.bookingService.createBooking(dto);
   }
 

@@ -30,26 +30,42 @@ export class CourtService {
       throw new BadRequestException('Invalid hourly rate or down payment');
     }
   }
-
+  
   async createCourt(createCourtDto: CreateCourtDto) {
-    const { availability, ...courtData } = createCourtDto;
+    const { availability, media, games, ...courtData } = createCourtDto;
     this.validateCourtData(courtData);
 
     try {
       const court = await this.prisma.court.create({
-        data: courtData,
-      });
-
-      for (const item of availability) {
-        await this.prisma.court_Availability.create({
-          data: {
-            court_id: court.id,
-            day: item.day,
-            start_time: item.start_time,
-            end_time: item.end_time,
+        data: {
+          ...courtData,
+          court_availability: {
+            create: availability.map((item) => ({
+              day: item.day,
+              start_time: item.start_time,
+              end_time: item.end_time,
+            })),
           },
-        });
-      }
+          court_media: {
+            create: media.map((item) => ({
+              media_type: item.media_type,
+              media_link: item.media_link,
+            })),
+          },
+          game_types: {
+            create: games.map((gameId) => ({
+              game_type: {
+                connect: { id: gameId },
+              },
+            })),
+          },
+        },
+        include: {
+          court_availability: true,
+          court_media: true,
+          game_types: true,
+        },
+      });
 
       return court;
     } catch (error) {
@@ -371,11 +387,11 @@ export class CourtService {
     }
   }
 
-  addCourtMedia(dto: CourtMediaDto) {
-    const { court_id, media_type, media_link } = dto;
+  addCourtMedia(id: string , dto: CourtMediaDto) {
+    const { media_type, media_link } = dto;
     return this.prisma.court_Media.create({
       data: {
-        court_id,
+        court_id : id,
         media_link,
         media_type,
       },

@@ -249,9 +249,9 @@ export class CourtController {
   @ApiBearerAuth()
   @Roles('admin')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Post('add_court_media')
-  add_court_media(@Body() dto: CourtMediaDto) {
-    return this.court_service.addCourtMedia(dto);
+  @Post('add_court_media/:id')
+  add_court_media(@Param('id') id: string , @Body() dto: CourtMediaDto) {
+    return this.court_service.addCourtMedia(id,dto);
   }
 
   @ApiOperation({ summary: 'deletes media from a court' })

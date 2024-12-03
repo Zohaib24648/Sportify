@@ -196,40 +196,57 @@ export class AuthService {
   }
 
 
-  async  forgotPassword(email: string) {
+  async forgotPassword(email: string) {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    const token = await this.signToken(user.id, user.email, user.role, '30m');
-    const link_to_reset = `${process.env.RESET_PASSWORD_URL}/${token.access_token}`;
-    return this.mailService.sendEmail(
+
+    // Generate a reset token with a short expiry time
+    const { access_token } = await this.signToken(user.id, user.email, user.role, '30m');
+
+    const resetLink = `${process.env.RESET_PASSWORD_URL}?token=${access_token}`;
+
+    // Send the reset link via email
+    await this.mailService.sendEmail(
       email,
-      'Reset Password',
-      link_to_reset,
+      'Password Reset Request',
+      `Click the link to reset your password: ${resetLink}`,
     );
+
+    return { message: 'Password reset link has been sent to your email.' };
   }
 
-  async resetPassword(dto : ResetPassDto) {
-    const { token, new_password} = dto;
-    const payload = this.jwt.verify(token, {
-      secret: process.env.JWT_SECRET,
-    });
-    const userId = payload.sub;
+  async resetPassword(dto: ResetPassDto) {
+    const { token, new_password } = dto;
 
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-    if (!user) {
-      throw new NotFoundException('User not found');
+    try {
+      // Verify the token
+      const payload = this.jwt.verify(token, {
+        secret: process.env.JWT_SECRET,
+      });
+      const userId = payload.sub;
+
+      // Find the user
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+      });
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      // Update the user's password
+      const hash = await argon.hash(new_password);
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          password_hash: hash,
+        },
+      });
+
+      return { message: 'Password reset successfully' };
+    } catch (error) {
+      throw new UnauthorizedException('Invalid or expired token');
     }
-    const hash = await argon.hash(new_password);
-    await this.prisma.user.update({
-    where: { id: user.id },
-      data: {
-        password_hash: hash,
-      },
-    });
-    return { message: 'Password reset successfully' };
   }
 }

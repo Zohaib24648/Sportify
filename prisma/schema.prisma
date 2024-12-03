@@ -64,6 +64,12 @@ enum PAYMENT_METHOD {
   ONLINE
 }
 
+enum COURT_TYPE {
+  indoor
+  outdoor
+  multipurpose
+
+}
 model User {
   id                   String    @id @default(uuid())
   user_id              Int       @unique @default(autoincrement())
@@ -95,6 +101,7 @@ model Court {
   court_location     String
   hourly_rate        Int
   min_down_payment   Int
+  court_type         COURT_TYPE
   created_at         DateTime             @default(now())
   updated_at         DateTime             @updatedAt
   court_specs        Court_Specs[]
@@ -112,6 +119,7 @@ model Game_Type {
   name   String            @unique
   courts Court_Game_Type[]
 }
+//status , active , inactive 
 
 model Court_Game_Type {
   id           String    @id @default(uuid())

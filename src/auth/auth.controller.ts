@@ -56,17 +56,20 @@ export class AuthController {
     return this.authService.resendVerificationEmail(email);
   }
 
-  @ApiOperation({ summary: 'Forgot Password' })
-  @ApiResponse({ status: 500, description: 'Undefined Error' })
-  @Get('forgot_password/:email')
-  forgotPassword(@Param('email') email: string) {
+  @ApiOperation({ summary: 'Request password reset' })
+  @ApiResponse({ status: 200, description: 'Reset link sent' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @Post('forgot_password')
+  async forgotPassword(@Body('email') email: string) {
     return this.authService.forgotPassword(email);
   }
 
-  @ApiOperation({ summary: 'Forgot Password_ Next Step' })
-  @ApiResponse({ status: 500, description: 'Undefined Error' })
-  @Get('forgot_password2')
-  forgotPassword2(@Query() dto : ResetPassDto  ) {
+  @ApiOperation({ summary: 'Reset password using token' })
+  @ApiResponse({ status: 200, description: 'Password reset successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid data' })
+  @ApiResponse({ status: 401, description: 'Invalid or expired token' })
+  @Post('reset_password')
+  async resetPassword(@Body() dto: ResetPassDto) {
     return this.authService.resetPassword(dto);
   }
 }

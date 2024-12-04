@@ -5,6 +5,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
+  Logger,
 } from '@nestjs/common';
 import { Prisma, ROLE } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -15,8 +16,11 @@ import { SignupDto } from './dto/signup.dto';
 import { SigninDto } from './dto/signin.dto';
 import { ResetPassDto } from './dto/resetpass.dto';
 import { ChangePasswordDto } from './dto/changepass.dto';
+
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
@@ -44,18 +48,18 @@ export class AuthService {
   }
 
   // Private method to generate tokens
-private async generateToken(
-  userId: string,
-  email: string,
-  roles: ROLE[],
-  expiresIn: string,
-): Promise<string> {
-  const payload = { sub: userId, email, roles }; // 'roles' included
-  return this.jwt.signAsync(payload, {
-    expiresIn,
-    secret: process.env.JWT_SECRET,
-  });
-}
+  private async generateToken(
+    userId: string,
+    email: string,
+    roles: ROLE[],
+    expiresIn: string,
+  ): Promise<string> {
+    const payload = { sub: userId, email, roles }; // 'roles' included
+    return this.jwt.signAsync(payload, {
+      expiresIn,
+      secret: process.env.JWT_SECRET,
+    });
+  }
 
   // Private method to verify tokens
   private verifyToken(token: string): any {
@@ -63,7 +67,8 @@ private async generateToken(
       return this.jwt.verify(token, {
         secret: process.env.JWT_SECRET,
       });
-    } catch {
+    } catch (error) {
+      this.logger.error('Token verification failed', error.stack);
       throw new UnauthorizedException('Invalid or expired token');
     }
   }
@@ -74,7 +79,15 @@ private async generateToken(
     subject: string,
     content: string,
   ): Promise<void> {
-    await this.mailService.sendEmail(email, subject, content);
+    try {
+      await this.mailService.sendEmail(email, subject, content);
+    } catch (error) {
+      this.logger.error(
+        `Failed to send email to ${email}: ${error.message}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException('Failed to send email');
+    }
   }
 
   // Signup method
@@ -105,74 +118,98 @@ private async generateToken(
       ) {
         throw new ConflictException('Email or phone number already exists');
       }
+      this.logger.error('Failed to sign up user', error.stack);
       throw new InternalServerErrorException('An unexpected error occurred');
     }
   }
 
   // Private method to send verification email
   private async sendVerificationEmail(user: any): Promise<void> {
-    const token = await this.generateToken(
-      user.id,
-      user.email,
-      user.role,
-      this.TOKEN_EXPIRY.VERIFICATION,
-    );
-    const verificationLink = `${process.env.VERIFY_USER_URL}/verify-user/${token}`;
-    const emailContent = `Please verify your email by clicking the following link: ${verificationLink}`;
+    try {
+      const token = await this.generateToken(
+        user.id,
+        user.email,
+        user.role,
+        this.TOKEN_EXPIRY.VERIFICATION,
+      );
+      const verificationLink = `${process.env.VERIFY_USER_URL}/verify-user/${token}`;
+      const emailContent = `Please verify your email by clicking the following link: ${verificationLink}`;
 
-    await this.sendEmail(user.email, 'Email Verification', emailContent);
+      await this.sendEmail(user.email, 'Email Verification', emailContent);
+    } catch (error) {
+      this.logger.error('Failed to send verification email', error.stack);
+      throw new InternalServerErrorException('Failed to send verification email');
+    }
   }
 
   // Resend verification email
   async resendVerificationEmail(email: string): Promise<{ message: string }> {
-    const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user) throw new NotFoundException('User not found');
+    try {
+      const user = await this.prisma.user.findUnique({ where: { email } });
+      if (!user) throw new NotFoundException('User not found');
 
-    await this.sendVerificationEmail(user);
-    return { message: 'Verification email sent successfully' };
+      await this.sendVerificationEmail(user);
+      return { message: 'Verification email sent successfully' };
+    } catch (error) {
+      this.logger.error('Failed to resend verification email', error.stack);
+      throw error;
+    }
   }
 
   // Verify user
   async verifyUser(token: string): Promise<{ message: string }> {
-    const payload = this.verifyToken(token);
-    const userId = payload.sub;
+    try {
+      const payload = this.verifyToken(token);
+      const userId = payload.sub;
 
-    const user = await this.prisma.user.update({
-      where: { id: userId },
-      data: { email_verified: true },
-    });
+      const user = await this.prisma.user.update({
+        where: { id: userId },
+        data: { email_verified: true },
+      });
 
-    if (!user) throw new NotFoundException('User not found');
+      if (!user) throw new NotFoundException('User not found');
 
-    return { message: 'User verified successfully' };
+      return { message: 'User verified successfully' };
+    } catch (error) {
+      this.logger.error('User verification failed', error.stack);
+      throw error;
+    }
   }
 
   // Signin method
   async signin(dto: SigninDto): Promise<{ access_token: string }> {
     const { email, password } = dto;
 
-    const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user || !user.password_hash)
-      throw new UnauthorizedException('Invalid email or password');
+    try {
+      const user = await this.prisma.user.findUnique({ where: { email } });
+      if (!user || !user.password_hash) {
+        throw new UnauthorizedException('Invalid email or password');
+      }
 
-    const passwordMatches = await this.verifyPassword(
-      user.password_hash,
-      password,
-    );
-    if (!passwordMatches)
-      throw new UnauthorizedException('Invalid email or password');
+      const passwordMatches = await this.verifyPassword(
+        user.password_hash,
+        password,
+      );
+      if (!passwordMatches) {
+        throw new UnauthorizedException('Invalid email or password');
+      }
 
-    if (!user.email_verified)
-      throw new UnauthorizedException('Email not verified');
+      if (!user.email_verified) {
+        throw new UnauthorizedException('Email not verified');
+      }
 
-    const token = await this.generateToken(
-      user.id,
-      user.email,
-      user.roles,
-      this.TOKEN_EXPIRY.ACCESS,
-    );
+      const token = await this.generateToken(
+        user.id,
+        user.email,
+        user.roles,
+        this.TOKEN_EXPIRY.ACCESS,
+      );
 
-    return { access_token: token };
+      return { access_token: token };
+    } catch (error) {
+      this.logger.error('Signin failed', error.stack);
+      throw error;
+    }
   }
 
   // Change password
@@ -182,56 +219,72 @@ private async generateToken(
   ): Promise<{ message: string }> {
     const { oldPassword, newPassword } = dto;
 
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user) throw new NotFoundException('User not found');
+    try {
+      const user = await this.prisma.user.findUnique({ where: { id: userId } });
+      if (!user) throw new NotFoundException('User not found');
 
-    const passwordMatches = await this.verifyPassword(
-      user.password_hash,
-      oldPassword,
-    );
-    if (!passwordMatches)
-      throw new UnauthorizedException('Incorrect old password');
+      const passwordMatches = await this.verifyPassword(
+        user.password_hash,
+        oldPassword,
+      );
+      if (!passwordMatches)
+        throw new UnauthorizedException('Incorrect old password');
 
-    const hashedNewPassword = await this.hashPassword(newPassword);
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { password_hash: hashedNewPassword },
-    });
+      const hashedNewPassword = await this.hashPassword(newPassword);
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { password_hash: hashedNewPassword },
+      });
 
-    return { message: 'Password changed successfully' };
+      return { message: 'Password changed successfully' };
+    } catch (error) {
+      this.logger.error('Failed to change password', error.stack);
+      throw error;
+    }
   }
 
   // Forgot password
   async forgotPassword(email: string): Promise<{ message: string }> {
-    const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user) throw new NotFoundException('User not found');
+    try {
+      const user = await this.prisma.user.findUnique({ where: { email } });
+      if (!user) throw new NotFoundException('User not found');
 
-    const token = await this.generateToken(
-      user.id,
-      user.email,
-      user.roles,
-      this.TOKEN_EXPIRY.PASSWORD_RESET,
-    );
-    const resetLink = `${process.env.RESET_PASSWORD_URL}/${token}`;
-    const emailContent = `Click the link to reset your password: ${resetLink}`;
+      const token = await this.generateToken(
+        user.id,
+        user.email,
+        user.roles,
+        this.TOKEN_EXPIRY.PASSWORD_RESET,
+      );
+      const resetLink = `${process.env.RESET_PASSWORD_URL}/${token}`;
+      const emailContent = `Click the link to reset your password: ${resetLink}`;
 
-    await this.sendEmail(email, 'Password Reset Request', emailContent);
+      await this.sendEmail(email, 'Password Reset Request', emailContent);
 
-    return { message: 'Password reset link has been sent to your email' };
+      return { message: 'Password reset link has been sent to your email' };
+    } catch (error) {
+      this.logger.error('Failed to process forgot password', error.stack);
+      throw error;
+    }
   }
 
   // Reset password
   async resetPassword(dto: ResetPassDto): Promise<{ message: string }> {
     const { token, new_password } = dto;
-    const payload = this.verifyToken(token);
-    const userId = payload.sub;
 
-    const hashedPassword = await this.hashPassword(new_password);
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { password_hash: hashedPassword },
-    });
+    try {
+      const payload = this.verifyToken(token);
+      const userId = payload.sub;
 
-    return { message: 'Password reset successfully' };
+      const hashedPassword = await this.hashPassword(new_password);
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { password_hash: hashedPassword },
+      });
+
+      return { message: 'Password reset successfully' };
+    } catch (error) {
+      this.logger.error('Failed to reset password', error.stack);
+      throw error;
+    }
   }
 }

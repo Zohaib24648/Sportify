@@ -8,23 +8,18 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('users')
 export class UserController {
-    constructor (private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) {}
 
-    @Get('search')
+  @Get('search')
   async searchUsers(@Query() dto: UserSearchDto) {
     return this.userService.searchUsers(dto);
-
-   
-
-
   }
   @ApiBearerAuth()
-  @Get('me')      
+  @Get('me')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   async getMe(@Req() req) {
     const dto = req.user;
     return this.userService.getMe(dto);
-       
   }
 
   @ApiBearerAuth()
@@ -34,7 +29,7 @@ export class UserController {
     const dto = req.user;
     return this.userService.getBookingHistory(dto);
   }
-  
+
   @ApiBearerAuth()
   @Get('paymentHistory')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -42,5 +37,4 @@ export class UserController {
     const dto = req.user;
     return this.userService.getPaymentHistory(dto);
   }
-
 }

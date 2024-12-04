@@ -6,6 +6,6 @@ import { CourtService } from 'src/court/court.service';
 
 @Module({
   controllers: [SlotController],
-  providers: [SlotService,CourtService]
+  providers: [SlotService, CourtService],
 })
 export class SlotModule {}

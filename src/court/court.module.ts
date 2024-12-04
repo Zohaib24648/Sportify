@@ -4,9 +4,8 @@ import { CourtController } from './court.controller';
 import { CourtService } from './court.service';
 import { JwtService } from '@nestjs/jwt';
 
-
 @Module({
-  controllers: [CourtController,],
-  providers: [CourtService,JwtService],
+  controllers: [CourtController],
+  providers: [CourtService, JwtService],
 })
 export class CourtModule {}

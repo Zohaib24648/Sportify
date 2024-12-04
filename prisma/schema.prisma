@@ -36,6 +36,11 @@ enum MEDIA_TYPE {
   audio
 }
 
+enum GAME_TYPE {
+  indoor
+  outdoor
+}
+
 enum REVIEW_STATUS {
   pending
   approved
@@ -64,16 +69,24 @@ enum PAYMENT_METHOD {
   ONLINE
 }
 
+enum COURT_TYPE {
+  indoor
+  outdoor
+  multipurpose
+
+}
 model User {
   id                   String    @id @default(uuid())
-  user_id              Int       @default(autoincrement())
+  user_id              Int       @unique @default(autoincrement())
   name                 String
   email                String    @unique
+  email_verified       Boolean   @default(false)
+  phone_verified       Boolean   @default(false)
   password_hash        String
   user_pfp_link        String    @default("https://www.shutterstock.com/shutterstock/photos/1677509740/display_1500/stock-vector-default-avatar-profile-icon-social-media-user-vector-1677509740.jpg")
   user_phone           String    @unique
   secondary_user_phone String?
-  role                 ROLE[]    @default([user])
+  roles                 ROLE[]    @default([user])
   created_at           DateTime  @default(now())
   updated_at           DateTime  @updatedAt
   bookings             Booking[]
@@ -81,16 +94,19 @@ model User {
 
   @@index([email])
   @@index([user_phone])
+  @@index([user_id])
 }
-
+//outdoor , indoor , multiground
 model Court {
   id                 String               @id @default(uuid())
-  court_id           Int                  @default(autoincrement())
+  court_id           Int                  @unique @default(autoincrement())
   name               String
+  is_deleted         Boolean              @default(false)
   description        String?
   court_location     String
   hourly_rate        Int
   min_down_payment   Int
+  court_type         COURT_TYPE           
   created_at         DateTime             @default(now())
   updated_at         DateTime             @updatedAt
   court_specs        Court_Specs[]
@@ -106,8 +122,12 @@ model Court {
 model Game_Type {
   id     String            @id @default(uuid())
   name   String            @unique
+  description String?
+  category  GAME_TYPE
+  person  String?          @default("5v5")
   courts Court_Game_Type[]
 }
+//status , active , inactive 
 
 model Court_Game_Type {
   id           String    @id @default(uuid())

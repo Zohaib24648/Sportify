@@ -6,100 +6,119 @@ import { Roles } from 'src/auth/guard/roles.decorator';
 import { GameService } from './game.service';
 import { GameDto } from './dto/game.dto';
 import { AddGameCourtDto } from './dto/addgamecourt.dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 
 @ApiTags('Games')
 @Controller('game')
 export class GameController {
-    constructor(private game_service: GameService) {}
+  constructor(private game_service: GameService) {}
 
+  @ApiOperation({ summary: 'Create a new game' })
+  @ApiResponse({ status: 201, description: 'Game created successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiBearerAuth()
+  // Create Game
+  @Roles('admin')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Post('create_game')
+  create_game(@Body() dto: GameDto) {
+    return this.game_service.create_game(dto);
+  }
 
+  @ApiOperation({ summary: 'Retrieve all games' })
+  @ApiResponse({ status: 200, description: 'List of games retrieved' })
+  @ApiBearerAuth()
+  // Get Games
+  @UseGuards(AuthGuard('jwt'))
+  @Get('get_games')
+  get_games() {
+    return this.game_service.get_games();
+  }
 
-    @ApiOperation({ summary: 'Create a new game' })
-    @ApiResponse({ status: 201, description: 'Game created successfully' })
-    @ApiResponse({ status: 400, description: 'Bad request' })
-    @ApiBearerAuth()
-    // Create Game
-    @Roles('admin')
-    @UseGuards(AuthGuard('jwt'),RolesGuard)
-    @Post('create_game')
-    create_game(@Body() dto: GameDto) {
-        return this.game_service.create_game(dto);
-        }
+  @ApiOperation({ summary: 'Delete a game by ID' })
+  @ApiResponse({ status: 200, description: 'Game deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Game not found' })
+  @ApiBearerAuth()
+  // Delete Game
+  @Roles('admin')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Delete('delete_game/:id')
+  delete_game(@Param('id') id: string) {
+    return this.game_service.delete_game(id);
+  }
 
+  @ApiOperation({ summary: 'Update a game by ID' })
+  @ApiResponse({ status: 200, description: 'Game updated successfully' })
+  @ApiResponse({ status: 404, description: 'Game not found' })
+  @ApiBearerAuth()
+  // Update Game
+  @Roles('admin')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Put('update_game/:id')
+  update_game(@Param('id') id: string, @Body() dto: GameDto) {
+    return this.game_service.update_game(id, dto);
+  }
 
-        @ApiOperation({ summary: 'Retrieve all games' })
-    @ApiResponse({ status: 200, description: 'List of games retrieved' })
-    @ApiBearerAuth()
-    // Get Games
-    @UseGuards(AuthGuard('jwt'))
-    @Get('get_games')
-    get_games() {
-        return this.game_service.get_games();
-    }
+  
+  
+  
+  @ApiOperation({ summary: 'Add multiple games to a court' })
+  @ApiResponse({ status: 201, description: 'Games successfully added to court' })
+  @ApiResponse({
+    status: 409,
+    description: 'Conflict - One or more games already linked to this court',
+  })
+  @ApiBearerAuth()
+  @Roles('admin')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Post('add_games_to_court')
+  add_games_to_court(@Body() dto: AddGameCourtDto) {
+    return this.game_service.addGamesToCourt(dto);
+  }
 
-    @ApiOperation({ summary: 'Delete a game by ID' })
-    @ApiResponse({ status: 200, description: 'Game deleted successfully' })
-    @ApiResponse({ status: 404, description: 'Game not found' })
-    @ApiBearerAuth()
-    // Delete Game
-    @Roles('admin')
-    @UseGuards(AuthGuard('jwt'),RolesGuard)
-    @Delete('delete_game/:id')
-    delete_game(@Param('id') id: string) {
-        return this.game_service.delete_game(id);
-    }
+  @ApiOperation({ summary: 'Update games for a court' })
+  @ApiResponse({
+    status: 200,
+    description: 'Games successfully updated for court',
+  })
+  @ApiResponse({ status: 404, description: 'Game or court not found' })
+  @ApiBearerAuth()
+  @Roles('admin')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Put('update_court_games')
+  update_court_games(@Body() dto: AddGameCourtDto) {
+    return this.game_service.updateCourtGames(dto);
+  }
+  
 
+  // @ApiOperation({ summary: 'Delete a game from a court' })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Game successfully deleted from court',
+  // })
+  // @ApiResponse({ status: 404, description: 'Game or court not found' })
+  // @ApiBearerAuth()
+  // // Delete Game from Court
+  // @Roles('admin')
+  // @UseGuards(AuthGuard('jwt'), RolesGuard)
+  // @Delete('delete_game_from_court')
+  // delete_court_games(@Body() dto: AddGameCourtDto) {
+  //   return this.game_service.delete_court_game(dto);
+  // }
 
-    @ApiOperation({ summary: 'Update a game by ID' })
-    @ApiResponse({ status: 200, description: 'Game updated successfully' })
-    @ApiResponse({ status: 404, description: 'Game not found' })
-    @ApiBearerAuth()
-    // Update Game
-    @Roles('admin')
-    @UseGuards(AuthGuard('jwt'),RolesGuard)
-    @Put('update_game/:id')
-    update_game(@Param('id') id: string, @Body() dto: GameDto) {
-        return this.game_service.update_game(id, dto);
-    }
-
-    @ApiOperation({ summary: 'Add a game to a court' })
-    @ApiResponse({ status: 201, description: 'Game successfully added to court' })
-    @ApiResponse({ status: 409, description: 'Conflict - Game already linked to this court' })
-    @ApiBearerAuth()
-    // Add Game to Court
-    @Roles('admin')
-    @UseGuards(AuthGuard('jwt'),RolesGuard)
-    @Post('add_game_to_court')
-    add_court_games(@Body() dto: AddGameCourtDto) {
-        return this.game_service.addGameToCourt(dto);
-    }
-
-
-    @ApiOperation({ summary: 'Delete a game from a court' })
-    @ApiResponse({ status: 200, description: 'Game successfully deleted from court' })
-    @ApiResponse({ status: 404, description: 'Game or court not found' })
-    @ApiBearerAuth()
-    // Delete Game from Court
-    @Roles('admin')
-    @UseGuards(AuthGuard('jwt'),RolesGuard)
-    @Delete('delete_game_from_court')
-    delete_court_games(@Body() dto: AddGameCourtDto ) {
-        return this.game_service.delete_court_game(dto);
-    }
-
-
-
-    @ApiOperation({ summary: 'Get all games for a specific court' })
-    @ApiResponse({ status: 200, description: 'List of court games retrieved' })
-    @ApiResponse({ status: 404, description: 'Court not found' })
-    @ApiBearerAuth()
-    // Get Court Games
-    @UseGuards(AuthGuard('jwt'))
-    @Get('get_court_games/:id')
-    get_court_games(@Param('id') id: string) {
-        return this.game_service.get_court_games(id);
-    }
-
+  @ApiOperation({ summary: 'Get all games for a specific court' })
+  @ApiResponse({ status: 200, description: 'List of court games retrieved' })
+  @ApiResponse({ status: 404, description: 'Court not found' })
+  @ApiBearerAuth()
+  // Get Court Games
+  @UseGuards(AuthGuard('jwt'))
+  @Get('get_court_games/:id')
+  get_court_games(@Param('id') id: string) {
+    return this.game_service.get_court_games(id);
+  }
 }

@@ -6,6 +6,6 @@ import { CourtService } from 'src/court/court.service';
 
 @Module({
   controllers: [GameController],
-  providers: [GameService,PrismaService,CourtService]
+  providers: [GameService, PrismaService, CourtService],
 })
 export class GameModule {}

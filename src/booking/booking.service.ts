@@ -12,6 +12,8 @@ import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
+import { PaginationDto } from './dto/pagination.dto';
+import { MailService } from 'src/mail/mail.service';
 
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
@@ -26,7 +28,7 @@ dayjs.tz.setDefault('Asia/Karachi');
 
 @Injectable()
 export class BookingService {
-    constructor(private readonly prisma: PrismaService, private readonly courtService: CourtService,private readonly slotService: SlotService) {}
+    constructor(private readonly prisma: PrismaService, private readonly courtService: CourtService,private readonly slotService: SlotService,private readonly mailService: MailService) {}
 
     
 
@@ -57,7 +59,7 @@ export class BookingService {
         const slot = await this.slotService.createSlot(slotdto);
         const totalAmount = await this.calculateTotalAmount(slotdto);
       
-       return await this.prisma.booking.create({
+       const booking_details = await this.prisma.booking.create({
           data: {
             user_id,
             slot_id: slot.id,
@@ -68,6 +70,14 @@ export class BookingService {
             updated_at: new Date(),
           },
         });
+        const email = await this.prisma.user.findUnique({
+          where: { id: user_id },
+          select: { email: true },
+        });
+
+        const mail_body = "Your booking no is " + booking_details.id + " and your total amount is " + booking_details.total_amount + " and your slot id is " + slot.start_time + " to " + slot.end_time + " Please Pay "+ booking_details.total_amount +" to confirm your booking";
+        await this.mailService.sendEmail(email.email, 'Booking Confirmation', mail_body);
+        return booking_details;
       });
     } catch (error) {
       throw new InternalServerErrorException('Error creating booking', error.message);
@@ -113,9 +123,16 @@ export class BookingService {
     
     
     // Multiple Functions Required
-   async  get_all_Bookings() {
-        const bookings = await this.prisma.booking.findMany(
+   async  get_all_Bookings(dto:PaginationDto) {
+    const { page = 1, limit = 10 } = dto;
+    const skip = (page - 1) * limit;
+
+  
+        try {
+          const bookings = await this.prisma.booking.findMany(
             {
+              skip,
+              take: limit,
                 include: {
                     slot: true,
                     user: true,
@@ -126,6 +143,9 @@ export class BookingService {
             }
         );
         return bookings;
+        } catch (error) {
+          throw new InternalServerErrorException('Failed to fetch bookings', error.message);
+        }
     }
 
     
@@ -212,58 +232,46 @@ async getBookingDetails(id: string) {
 
 
 
+    // booking.service.ts
     async getBookingsWithFilters(filters: BookingFiltersDto) {
-        try {
-          const { start_time, end_time, status, gameTypes, courtTypes, searchTerm } = filters;
-      
+      try {
+        const { start_time, end_time, status, searchTerm } = filters;
+        console.log(filters);
+    
+        // Build the where clause
         const where: Prisma.BookingWhereInput = {};
-      
-        // Filter by booking status
+        //Working
+        // Status filter
         if (status) {
           where.status = status as BOOKING_STATUS;
         }
-      
-        // Filter by date range
-        // Filter by date range
-        if (start_time || end_time) {
-        where.slot = {
-          start_time: {
-            ...(start_time && { gte: start_time.toISOString() }),
-            ...(end_time && { lte: end_time.toISOString() }),
-          },
-        } as Prisma.SlotWhereInput;
+//Working
+// Date range filter
+if (start_time || end_time) {
+  where.slot = where.slot || {};
+
+  const filterStartTime = start_time 
+    ? dayjs.tz(start_time, 'Asia/Karachi').format('YYYY-MM-DDTHH:mm:ss')
+    : undefined;
+
+  const filterEndTime = end_time
+    ? dayjs.tz(end_time, 'Asia/Karachi').format('YYYY-MM-DDTHH:mm:ss')
+    : undefined;
+
+  where.slot.start_time = {
+    ...(filterStartTime && { gte: filterStartTime }),
+    ...(filterEndTime && { lte: filterEndTime })
+  };
 }
-        // Filter by game types
-        if (gameTypes) {
-          where.slot = where.slot || {};
-          where.slot.court = {
-            game_types: {
-              some: {
-                game_type: {
-                  name: gameTypes,
-                },
-              },
-            },
-          } as Prisma.CourtWhereInput;
+        // Search term filter
+        if (searchTerm) {
+          where.OR = [
+            { id: { contains: searchTerm, mode: 'insensitive' } },
+            { user: { name: { contains: searchTerm, mode: 'insensitive' } } },
+            { slot: { court: { name: { contains: searchTerm, mode: 'insensitive' } } } }
+          ];
         }
-      
-        // Filter by court types
-        if (courtTypes && courtTypes.length > 0) {
-          where.slot = where.slot || {};
-          where.slot.court = {
-            ...where.slot.court,
-            court_specs: {
-              some: {
-                name: {
-                  in: courtTypes,
-                },
-              },
-            },
-          } as Prisma.CourtWhereInput;
-        }
-      
-        console.log('Where clause:', where);
-      
+    
         // Execute query
         return await this.prisma.booking.findMany({
           where,
@@ -271,55 +279,27 @@ async getBookingDetails(id: string) {
             slot: {
               include: {
                 court: {
-                    include: {
-                        court_specs: true,
-                        game_types: {
-                            include: {
-                                game_type: true
-                            }
-                        }
-                    },
+                  include: {
+                    court_specs: true,
+                    game_types: {
+                      include: {
+                        game_type: true
+                      }
+                    }
+                  }
                 }
-              },
+              }
             },
             user: true,
-            payment: true,
+            payment: true
           },
+          orderBy: {
+            created_at: 'desc'
+          }
         });
-
-        } catch (error) {
-          throw new BadRequestException('Failed to fetch bookings', error.message);
-        }
+      } catch (error) {
+        throw new BadRequestException('Failed to fetch bookings', error.message);
       }
-      
-
-async searchBookings(searchTerm: string) {
-try {
-  const bookings = await this.prisma.booking.findMany({
-    where: {
-      OR: [
-        { id: { contains: searchTerm, mode: 'insensitive' } },
-        {
-          user: {
-            name: { contains: searchTerm, mode: 'insensitive' },
-          },
-        }
-      ],
-    },
-    include: {
-      slot: {
-        include: {
-          court: true,
-        },
-      },
-      user: true,
-      payment: true,
-    },
-  });
-  return bookings;
-} catch (error) {
-throw new BadRequestException('Failed to search bookings', error.message);  
-}
-}
+    } 
   
   }

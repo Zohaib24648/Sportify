@@ -1,4 +1,4 @@
-// guard/roles.guard.ts
+// src/auth/guard/roles.guard.ts
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from './roles.decorator';
@@ -8,22 +8,14 @@ export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const roles = this.reflector.get<string[]>(ROLES_KEY, context.getHandler());
-    if (!roles) {
+    const requiredRoles = this.reflector.get<string[]>(ROLES_KEY, context.getHandler());
+    if (!requiredRoles) {
       return true;
     }
-    const request = context.switchToHttp().getRequest();
-    const user = request.user;
-    console.log(user);
+    const { user } = context.switchToHttp().getRequest();
 
-    // Ensure user.roles is always an array
-    const userRoles = Array.isArray(user?.role) ? user.role : [user?.role];
+    const userRoles = Array.isArray(user?.roles) ? user.roles : [user?.roles]; 
 
-    return matchRoles(roles, userRoles);
+    return requiredRoles.some((role) => userRoles.includes(role));
   }
-}
-
-function matchRoles(requiredRoles: string[], userRoles: string[]): boolean {
-  // Check if any of the user's roles match any of the required roles
-  return requiredRoles.some((role) => userRoles.includes(role));
 }

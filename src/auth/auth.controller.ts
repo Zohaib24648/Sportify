@@ -5,6 +5,8 @@ import {
   Get,
   Param,
   Post,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignupDto, SigninDto } from './dto';
@@ -16,6 +18,10 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { ResetPassDto } from './dto/resetpass.dto';
+import { ChangePasswordDto } from './dto/changepass.dto';
+import { Roles } from './guard/roles.decorator';
+import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from './guard/roles.guard';
 
 
 @ApiTags('Authentication')
@@ -100,5 +106,22 @@ export class AuthController {
   @Post('reset-password')
   async resetPassword(@Body() dto: ResetPassDto){
     return await this.authService.resetPassword(dto);
+  }
+
+
+  @ApiOperation({ summary: 'Change password' })
+  @ApiBody({ type: ResetPassDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Password reset successfully.',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid or expired token.' })
+  @ApiResponse({ status: 404, description: 'User not found.' })
+  @Post('change-password')
+  @Roles('user','admin')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  async changePassword(@Req() req ,@Body() dto: ChangePasswordDto){
+    const userId = req.user.userId;
+  return await this.authService.changePassword(userId, dto);
   }
 }

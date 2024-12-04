@@ -44,18 +44,18 @@ export class AuthService {
   }
 
   // Private method to generate tokens
-  private async generateToken(
-    userId: string,
-    email: string,
-    roles: ROLE[],
-    expiresIn: string,
-  ): Promise<string> {
-    const payload = { sub: userId, email, roles };
-    return this.jwt.signAsync(payload, {
-      expiresIn,
-      secret: process.env.JWT_SECRET,
-    });
-  }
+private async generateToken(
+  userId: string,
+  email: string,
+  roles: ROLE[],
+  expiresIn: string,
+): Promise<string> {
+  const payload = { sub: userId, email, roles }; // 'roles' included
+  return this.jwt.signAsync(payload, {
+    expiresIn,
+    secret: process.env.JWT_SECRET,
+  });
+}
 
   // Private method to verify tokens
   private verifyToken(token: string): any {
@@ -168,7 +168,7 @@ export class AuthService {
     const token = await this.generateToken(
       user.id,
       user.email,
-      user.role,
+      user.roles,
       this.TOKEN_EXPIRY.ACCESS,
     );
 
@@ -209,7 +209,7 @@ export class AuthService {
     const token = await this.generateToken(
       user.id,
       user.email,
-      user.role,
+      user.roles,
       this.TOKEN_EXPIRY.PASSWORD_RESET,
     );
     const resetLink = `${process.env.RESET_PASSWORD_URL}/${token}`;

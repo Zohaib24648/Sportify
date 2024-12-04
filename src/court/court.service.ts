@@ -7,7 +7,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { DAY, MEDIA_TYPE, Prisma } from '@prisma/client';
+import { DAY, Prisma } from '@prisma/client';
 import { CourtDto } from 'src/court/dto/court.dto';
 import { CourtSpecDto } from 'src/court/dto/court_spec.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -165,6 +165,9 @@ export class CourtService {
         where: { id },
         data : { is_deleted: true }
       });
+      //delete availabilities , games , and other related tables  
+      
+
       return 'Court deleted successfully';
     } catch (error) {
       if (
@@ -175,6 +178,32 @@ export class CourtService {
       }
       throw new InternalServerErrorException(
         'Failed to delete court',
+        error.message,
+      );
+    }
+  }
+
+  async undeleteCourt(id: string){
+    try {
+      const court = await this.prisma.court.findUnique({ where: { id } });
+      if (!court) {
+        throw new NotFoundException(`Court with ID ${id} not found`);
+      }
+
+      await this.prisma.court.update({ 
+        where: { id },
+        data : { is_deleted: false }
+      });
+      return 'Court undeleted successfully';
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new NotFoundException(`Court with ID ${id} not found`);
+      }
+      throw new InternalServerErrorException(
+        'Failed to undelete court',
         error.message,
       );
     }
@@ -280,20 +309,15 @@ export class CourtService {
       }
       const { court_id, day } = availability;
       // Check for overlapping availabilities on the same day, excluding the current availability
-      const overlappingAvailabilities =
-        await this.prisma.court_Availability.findMany({
-          where: {
-            court_id,
-            day,
-            id: { not: id }, // Exclude the current availability
-            OR: [
-              {
-                start_time: { lt: end_time },
-                end_time: { gt: start_time },
-              },
-            ],
-          },
-        });
+      const overlappingAvailabilities = await this.prisma.court_Availability.findMany({
+        where: {
+          court_id,
+          day,
+          id: { not: id }, // Exclude current availability
+          start_time: { lt: end_time },
+          end_time: { gt: start_time },
+        },
+      });
 
       if (overlappingAvailabilities.length > 0) {
         throw new ConflictException(
@@ -308,8 +332,8 @@ export class CourtService {
       });
     } catch (error) {
       throw new InternalServerErrorException(
-        'Failed to update court availability',
         error.message,
+        'Failed to update court availability',
       );
     }
   }
@@ -347,19 +371,14 @@ export class CourtService {
     }
     try {
       // Check for overlapping availabilities on the same day
-      const overlappingAvailabilities =
-        await this.prisma.court_Availability.findMany({
-          where: {
-            court_id,
-            day,
-            OR: [
-              {
-                start_time: { lt: end_time },
-                end_time: { gt: start_time },
-              },
-            ],
-          },
-        });
+      const overlappingAvailabilities = await this.prisma.court_Availability.findMany({
+        where: {
+          court_id,
+          day,
+          start_time: { lt: end_time },
+          end_time: { gt: start_time },
+        },
+      });
 
       if (overlappingAvailabilities.length > 0) {
         throw new ConflictException(

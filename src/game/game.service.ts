@@ -92,39 +92,140 @@ export class GameService {
     }
   }
 
-  async addGameToCourt(dto: AddGameCourtDto) {
-    const { court_id, game_type_id } = dto;
-
+  async addGamesToCourt(dto: AddGameCourtDto) {
+    const { court_id, game_type_ids } = dto;
+  
     try {
-      //verify that court and game exist
-      const court = await this.courtService.get_court_details(court_id);
-      const game = await this.get_game(game_type_id);
-
-      if (!court || !game) {
-        throw new Error('Court or game not found');
+      const court = await this.prisma.court.findFirst(
+        { where: { id: court_id } }
+      );
+      if (!court) {        
+        throw new NotFoundException(`Court with ID ${court_id} not found`);
+      } 
+      
+           // If no game IDs are provided, delete all existing game links
+      if (game_type_ids.length === 0) {
+        await this.prisma.court_Game_Type.deleteMany({
+          where: { court_id },
+        });
+        return { message: 'All game links for the court have been deleted' };
       }
-
-      // Link the game to the court
-      const courtGameType = await this.prisma.court_Game_Type.create({
-        data: {
-          ...dto,
-        },
-      });
-      return courtGameType;
+  
+      // Verify that all game IDs exist
+      for (const game_type_id of game_type_ids) {
+        const game = await this.get_game(game_type_id);
+        if (!game) {
+          throw new NotFoundException(`Game with ID ${game_type_id} not found`);
+        }
+      }
+  
+      // Prepare data for createMany
+      const data = game_type_ids.map((game_type_id) => ({
+        court_id,
+        game_type_id,
+      }));
+  
+      // Use createMany if there are multiple entries, otherwise use create
+      if (data.length > 1) {
+        // Link the games to the court using createMany
+        const courtGameTypes = await this.prisma.court_Game_Type.createMany({
+          data,
+          skipDuplicates: true, // Optional: skips duplicates if any
+        });
+        return courtGameTypes;
+      } else {
+        // Link the single game to the court using create
+        const courtGameType = await this.prisma.court_Game_Type.create({
+          data: data[0],
+        });
+        return courtGameType;
+      }
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2002'
       ) {
-        throw new ConflictException(`Game is already linked to this court.`);
+        throw new ConflictException(`One or more games are already linked to this court.`);
       }
-
+  
       throw new InternalServerErrorException(
-        'Failed to add game to court',
+        'Failed to add games to court',
         error.message,
       );
     }
   }
+
+
+  async updateCourtGames(dto: AddGameCourtDto) {
+    const { court_id, game_type_ids } = dto;
+  
+    try {
+      // Verify that the court exists
+      const court = await this.courtService.get_court_details(court_id);
+      if (!court) {
+        throw new NotFoundException(`Court with ID ${court_id} not found`);
+      }
+  
+      // If no game IDs are provided, delete all existing game links
+      if (game_type_ids.length === 0) {
+        await this.prisma.court_Game_Type.deleteMany({
+          where: { court_id },
+        });
+        return { message: 'All game links for the court have been deleted' };
+      }
+  
+      // Verify that all game IDs exist
+      for (const game_type_id of game_type_ids) {
+        const game = await this.get_game(game_type_id);
+        if (!game) {
+          throw new NotFoundException(`Game with ID ${game_type_id} not found`);
+        }
+      }
+  
+      // Prepare data for createMany
+      const data = game_type_ids.map((game_type_id) => ({
+        court_id,
+        game_type_id,
+      }));
+  
+      // Update the games for the court using a transaction
+      return await this.prisma.$transaction(async (prisma) => {
+        // Delete existing game links
+        await prisma.court_Game_Type.deleteMany({
+          where: { court_id },
+        });
+  
+        // Create new game links
+        if (data.length > 1) {
+          // Use createMany if there are multiple entries
+          const courtGameTypes = await prisma.court_Game_Type.createMany({
+            data,
+            skipDuplicates: true, // Optional: skips duplicates if any
+          });
+          return courtGameTypes;
+        } else {
+          // Use create if there is only one entry
+          const courtGameType = await prisma.court_Game_Type.create({
+            data: data[0],
+          });
+          return courtGameType;
+        }
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException(`One or more games are already linked to this court.`);
+      }
+  
+      throw new InternalServerErrorException(
+        'Failed to update games for court',
+        error.message,
+      );
+    }
+  }
+
 
   async get_court_games(id: string) {
     try {
@@ -145,27 +246,27 @@ export class GameService {
     }
   }
 
-  async delete_court_game(dto: AddGameCourtDto) {
-    try {
-      const court_game = await this.prisma.court_Game_Type.deleteMany({
-        where: {
-          ...dto,
-        },
-      });
+  // async delete_court_game(dto: AddGameCourtDto) {
+  //   try {
+  //     const court_game = await this.prisma.court_Game_Type.deleteMany({
+  //       where: {
+  //         ...dto,
+  //       },
+  //     });
 
-      console.log('Game deleted successfully:', court_game);
-      return court_game;
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2025') {
-          throw new Error('Game type or court not found.');
-        }
-      }
+  //     console.log('Game deleted successfully:', court_game);
+  //     return court_game;
+  //   } catch (error) {
+  //     if (error instanceof Prisma.PrismaClientKnownRequestError) {
+  //       if (error.code === 'P2025') {
+  //         throw new Error('Game type or court not found.');
+  //       }
+  //     }
 
-      throw new InternalServerErrorException(
-        'An error occurred while deleting the game from the court.',
-        error.message,
-      );
-    }
-  }
+  //     throw new InternalServerErrorException(
+  //       'An error occurred while deleting the game from the court.',
+  //       error.message,
+  //     );
+  //   }
+  // }
 }

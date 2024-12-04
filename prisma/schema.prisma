@@ -36,6 +36,11 @@ enum MEDIA_TYPE {
   audio
 }
 
+enum GAME_TYPE {
+  indoor
+  outdoor
+}
+
 enum REVIEW_STATUS {
   pending
   approved
@@ -117,6 +122,9 @@ model Court {
 model Game_Type {
   id     String            @id @default(uuid())
   name   String            @unique
+  description String?
+  category  GAME_TYPE
+  person  String?          @default("5v5")
   courts Court_Game_Type[]
 }
 //status , active , inactive 

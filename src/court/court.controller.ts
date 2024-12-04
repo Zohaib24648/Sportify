@@ -174,6 +174,19 @@ export class CourtController {
     return this.court_service.deleteCourt(id);
   }
 
+    //UnDelete Court
+    @ApiOperation({ summary: 'UnDelete a court by ID' })
+    @ApiResponse({ status: 200, description: 'Court undeleted successfully' })
+    @ApiResponse({ status: 404, description: 'Court not found' })
+    @ApiBearerAuth()
+    @Roles('admin')
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    @Delete('undelete_court/:id')
+    undeleteCourt(@Param('id') id: string) {
+      return this.court_service.undeleteCourt(id);
+    }
+
+
   //Get Court Details
   @ApiOperation({ summary: 'Get details of a specific court by ID' })
   @ApiResponse({

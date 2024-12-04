@@ -1,4 +1,4 @@
-//auth/auth.service.ts
+// src/auth/auth.service.ts
 import {
   ConflictException,
   Injectable,
@@ -6,247 +6,232 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Prisma, PrismaClient, ROLE } from '@prisma/client';
+import { Prisma, ROLE } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { AuthDto } from './dto';
 import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
-import { SigninDto } from './dto/signin.dto';
-import { SignupDto } from './dto/signup.dto';
 import { MailService } from 'src/mail/mail.service';
+import { SignupDto } from './dto/signup.dto';
+import { SigninDto } from './dto/signin.dto';
 import { ResetPassDto } from './dto/resetpass.dto';
-
-@Injectable({})
+import { ChangePasswordDto } from './dto/changepass.dto';
+@Injectable()
 export class AuthService {
   constructor(
-    private prisma: PrismaService,
-    private jwt: JwtService,
-    private mailService: MailService,
+    private readonly prisma: PrismaService,
+    private readonly jwt: JwtService,
+    private readonly mailService: MailService,
   ) {}
 
-  async signup(dto: SignupDto) {
-    const email = dto.email;
-    const hash = await argon.hash(dto.password);
-    const name = dto.name;
-    const user_phone = dto.user_phone;
-    const secondary_user_phone = dto.secondary_user_phone;
+  // Constants for token expiry times
+  private readonly TOKEN_EXPIRY = {
+    VERIFICATION: '30m',
+    PASSWORD_RESET: '30m',
+    ACCESS: '10d',
+  };
+
+  // Private method to hash passwords
+  private async hashPassword(password: string): Promise<string> {
+    return argon.hash(password);
+  }
+
+  // Private method to verify passwords
+  private async verifyPassword(
+    hashedPassword: string,
+    password: string,
+  ): Promise<boolean> {
+    return argon.verify(hashedPassword, password);
+  }
+
+  // Private method to generate tokens
+  private async generateToken(
+    userId: string,
+    email: string,
+    roles: ROLE[],
+    expiresIn: string,
+  ): Promise<string> {
+    const payload = { sub: userId, email, roles };
+    return this.jwt.signAsync(payload, {
+      expiresIn,
+      secret: process.env.JWT_SECRET,
+    });
+  }
+
+  // Private method to verify tokens
+  private verifyToken(token: string): any {
+    try {
+      return this.jwt.verify(token, {
+        secret: process.env.JWT_SECRET,
+      });
+    } catch {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+  }
+
+  // Private method to send emails
+  private async sendEmail(
+    email: string,
+    subject: string,
+    content: string,
+  ): Promise<void> {
+    await this.mailService.sendEmail(email, subject, content);
+  }
+
+  // Signup method
+  async signup(dto: SignupDto): Promise<{ message: string }> {
+    const { email, password, name, user_phone, secondary_user_phone } = dto;
+    const hashedPassword = await this.hashPassword(password);
 
     try {
       const user = await this.prisma.user.create({
         data: {
-          email: email,
-          password_hash: hash,
-          name: name,
-          user_phone: user_phone,
-          secondary_user_phone: secondary_user_phone,
+          email,
+          password_hash: hashedPassword,
+          name,
+          user_phone,
+          secondary_user_phone,
         },
       });
-      await this.sendVerificationEmail(user.id, user.email, user.role);
 
-      return { message: 'User created successfully, and Verification Mail Sent' };
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        // Handle unique constraint violation
-        if (error.code === 'P2002') {
-          throw new ConflictException('Email or phone number already exists');
-        }
-      }
-      throw new InternalServerErrorException(
-        'An unexpected error occurred: ',
-        error.message,
-      );
-    }
-  }
+      await this.sendVerificationEmail(user);
 
-
-  async sendVerificationEmail(id: string, email: string, role: ROLE[]) {
-    const signed_token = await this.signToken(id, email, role, '30m');
-    const token = signed_token.access_token;
-
-    const link_to_verify = `${process.env.VERIFY_USER_URL}/${token}`;
-    console.log(link_to_verify);   
-    return await this.mailService.sendEmail(
-      email,
-      'Verify your email',
-      link_to_verify,
-    )
-
-}
-
-
-  async resendVerificationEmail(email:string){
-    const user = await this.prisma.user.findUnique({
-      where: { email },
-    });
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    this.sendVerificationEmail(user.id, user.email, user.role);
-    return { message: 'Verification email sent successfully'
-
-  }}
-
-  async verifyUser(token: string) {
-    try {
-      // Decode the token to get the payload
-      const payload = this.jwt.verify(token, {
-        secret: process.env.JWT_SECRET,
-      });
-
-      // Extract the user ID from the payload
-      const userId = payload.sub;
-      // console.log(userId);
-
-      // Find the user in the database
-      const user = await this.prisma.user.findUnique({
-        where: { id: userId },
-      });
-
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-
-      // Update the user's email verification status
-      await this.prisma.user.update({
-        where: { id: userId },
-        data: { email_verified: true },
-      });
-
-      return { message: 'User verified successfully' };
-    } catch (error) {
-      throw new InternalServerErrorException(
-        'Failed to verify user',
-        error.message,
-      );
-    }
-  }
-
-  async signin(req: SigninDto) {
-    try {
-      const { email, password } = req;
-
-      const user = await this.prisma.user.findUnique({
-        where: { email },
-      });
-
-      if (!user || !user.password_hash) {
-        throw new UnauthorizedException('Invalid email or password');
-      }
-
-      const match = await argon.verify(user.password_hash, password);
-      if (!match) {
-        throw new UnauthorizedException('Invalid email or password');
-      }
-
-      const user_verified = user.email_verified;
-      if (!user_verified) {
-        throw new UnauthorizedException('Email not verified');
-      }
-
-      return this.signToken(user.id, user.email, user.role, '10d');
-    } catch (error) {
-      throw new InternalServerErrorException(
-        'Failed to sign in',
-        error.message,
-      );
-    }
-  }
-
-  async signToken(
-    userid: string,
-    email: string,
-    role: ROLE[],
-    expirytime: string,
-  ): Promise<{ access_token: string }> {
-    try {
-      const payload = { sub: userid, email, role };
-      const token = await this.jwt.signAsync(payload, {
-        expiresIn: expirytime,
-        secret: process.env.JWT_SECRET,
-      });
       return {
-        access_token: token,
+        message: 'User created successfully, verification email sent.',
       };
     } catch (error) {
-      throw new InternalServerErrorException(
-        'Failed to sign token',
-        error.message,
-      );
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException('Email or phone number already exists');
+      }
+      throw new InternalServerErrorException('An unexpected error occurred');
     }
   }
 
-  async changePassword(id: string, dto: any) {
-    const { oldPassword, newPassword } = dto;
-    const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) {
-      throw new NotFoundException('user not found');
-    }
-    const match = await argon.verify(user.password_hash, oldPassword);
-    if (!match) {
-      throw new UnauthorizedException('Incorrect old Password');
-    }
-    const hash = await argon.hash(newPassword);
-    await this.prisma.user.update({
-      where: { id },
-      data: {
-        password_hash: hash,
-      },
+  // Private method to send verification email
+  private async sendVerificationEmail(user: any): Promise<void> {
+    const token = await this.generateToken(
+      user.id,
+      user.email,
+      user.role,
+      this.TOKEN_EXPIRY.VERIFICATION,
+    );
+    const verificationLink = `${process.env.VERIFY_USER_URL}/verify-user/${token}`;
+    const emailContent = `Please verify your email by clicking the following link: ${verificationLink}`;
+
+    await this.sendEmail(user.email, 'Email Verification', emailContent);
+  }
+
+  // Resend verification email
+  async resendVerificationEmail(email: string): Promise<{ message: string }> {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) throw new NotFoundException('User not found');
+
+    await this.sendVerificationEmail(user);
+    return { message: 'Verification email sent successfully' };
+  }
+
+  // Verify user
+  async verifyUser(token: string): Promise<{ message: string }> {
+    const payload = this.verifyToken(token);
+    const userId = payload.sub;
+
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { email_verified: true },
     });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    return { message: 'User verified successfully' };
+  }
+
+  // Signin method
+  async signin(dto: SigninDto): Promise<{ access_token: string }> {
+    const { email, password } = dto;
+
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user || !user.password_hash)
+      throw new UnauthorizedException('Invalid email or password');
+
+    const passwordMatches = await this.verifyPassword(
+      user.password_hash,
+      password,
+    );
+    if (!passwordMatches)
+      throw new UnauthorizedException('Invalid email or password');
+
+    if (!user.email_verified)
+      throw new UnauthorizedException('Email not verified');
+
+    const token = await this.generateToken(
+      user.id,
+      user.email,
+      user.role,
+      this.TOKEN_EXPIRY.ACCESS,
+    );
+
+    return { access_token: token };
+  }
+
+  // Change password
+  async changePassword(
+    userId: string,
+    dto: ChangePasswordDto,
+  ): Promise<{ message: string }> {
+    const { oldPassword, newPassword } = dto;
+
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const passwordMatches = await this.verifyPassword(
+      user.password_hash,
+      oldPassword,
+    );
+    if (!passwordMatches)
+      throw new UnauthorizedException('Incorrect old password');
+
+    const hashedNewPassword = await this.hashPassword(newPassword);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { password_hash: hashedNewPassword },
+    });
+
     return { message: 'Password changed successfully' };
   }
 
-
-  async forgotPassword(email: string) {
+  // Forgot password
+  async forgotPassword(email: string): Promise<{ message: string }> {
     const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+    if (!user) throw new NotFoundException('User not found');
 
-    // Generate a reset token with a short expiry time
-    const { access_token } = await this.signToken(user.id, user.email, user.role, '30m');
-
-    const resetLink = `${process.env.RESET_PASSWORD_URL}?token=${access_token}`;
-
-    // Send the reset link via email
-    await this.mailService.sendEmail(
-      email,
-      'Password Reset Request',
-      `Click the link to reset your password: ${resetLink}`,
+    const token = await this.generateToken(
+      user.id,
+      user.email,
+      user.role,
+      this.TOKEN_EXPIRY.PASSWORD_RESET,
     );
+    const resetLink = `${process.env.RESET_PASSWORD_URL}/${token}`;
+    const emailContent = `Click the link to reset your password: ${resetLink}`;
 
-    return { message: 'Password reset link has been sent to your email.' };
+    await this.sendEmail(email, 'Password Reset Request', emailContent);
+
+    return { message: 'Password reset link has been sent to your email' };
   }
 
-  async resetPassword(dto: ResetPassDto) {
+  // Reset password
+  async resetPassword(dto: ResetPassDto): Promise<{ message: string }> {
     const { token, new_password } = dto;
+    const payload = this.verifyToken(token);
+    const userId = payload.sub;
 
-    try {
-      // Verify the token
-      const payload = this.jwt.verify(token, {
-        secret: process.env.JWT_SECRET,
-      });
-      const userId = payload.sub;
+    const hashedPassword = await this.hashPassword(new_password);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { password_hash: hashedPassword },
+    });
 
-      // Find the user
-      const user = await this.prisma.user.findUnique({
-        where: { id: userId },
-      });
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-
-      // Update the user's password
-      const hash = await argon.hash(new_password);
-      await this.prisma.user.update({
-        where: { id: user.id },
-        data: {
-          password_hash: hash,
-        },
-      });
-
-      return { message: 'Password reset successfully' };
-    } catch (error) {
-      throw new UnauthorizedException('Invalid or expired token');
-    }
+    return { message: 'Password reset successfully' };
   }
 }

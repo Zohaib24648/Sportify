@@ -1,75 +1,104 @@
-//auth/auth.controller.ts
-import { Body, Controller, Get, Param, Post, Query, Req } from '@nestjs/common';
+// src/auth/auth.controller.ts
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignupDto, SigninDto } from './dto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiBody,
+  ApiParam,
+} from '@nestjs/swagger';
 import { ResetPassDto } from './dto/resetpass.dto';
 
-@ApiTags('Auth')
+
+@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
-  @ApiOperation({ summary: 'Sign up a new user' })
+  @ApiOperation({ summary: 'Register a new user' })
+  @ApiBody({ type: SignupDto })
   @ApiResponse({
     status: 201,
-    description: 'User successfully created and signed in.',
+    description: 'User registered successfully.',
   })
-  @ApiResponse({ status: 500, description: 'Undefined Error' })
-  @ApiResponse({ status: 409, description: 'User already exists' })
+  @ApiResponse({ status: 400, description: 'Invalid input data.' })
+  @ApiResponse({ status: 409, description: 'Email or phone number already exists.' })
   @Post('signup')
-  signup(@Body() req: SignupDto) {
-    return this.authService.signup(req);
+  async signup(@Body() dto: SignupDto){
+    return await this.authService.signup(dto);
   }
 
-  @ApiOperation({ summary: 'Sign in an existing user' })
+  @ApiOperation({ summary: 'User login' })
+  @ApiBody({ type: SigninDto })
   @ApiResponse({
-    status: 201,
-    description: 'User successfully signed in. and a Token is returned',
+    status: 200,
+    description: 'User logged in successfully.',
   })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized \ Credentials are Incorrect',
-  })
-  @ApiResponse({ status: 500, description: 'Undefined Error' })
+  @ApiResponse({ status: 400, description: 'Invalid input data.' })
+  @ApiResponse({ status: 401, description: 'Invalid email or password.' })
+  @ApiResponse({ status: 403, description: 'Email not verified.' })
   @Post('signin')
-  signin(@Body() req: SigninDto) {
-    return this.authService.signin(req);
+  async signin(@Body() dto: SigninDto){
+    return await this.authService.signin(dto);
   }
 
-  
-  
-  
-  
-  
-  @ApiOperation({ summary: 'Verifies the user' })
-  @ApiResponse({ status: 500, description: 'Undefined Error' })
-  @Get('verify_user/:token')
-  verifyUser(@Param('token') token: string) {
-    return this.authService.verifyUser(token);
+  @ApiOperation({ summary: 'Verify user email' })
+  @ApiParam({ name: 'token', description: 'Verification token' })
+  @ApiResponse({
+    status: 200,
+    description: 'User verified successfully.',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid or expired token.' })
+  @ApiResponse({ status: 404, description: 'User not found.' })
+  @Get('verify-user/:token')
+  async verifyUser(@Param('token') token: string){
+    return await this.authService.verifyUser(token);
   }
 
-  @ApiOperation({ summary: 'Resends Verification Email' })
-  @ApiResponse({ status: 500, description: 'Undefined Error' })
-  @Get('resend_verification_email/:email')
-  resendVerificationEmail(@Param('email') email: string) {
-    return this.authService.resendVerificationEmail(email);
+  @ApiOperation({ summary: 'Resend verification email' })
+  @ApiParam({ name: 'email', description: 'User email address' })
+  @ApiResponse({
+    status: 200,
+    description: 'Verification email sent successfully.',
+  })
+  @ApiResponse({ status: 404, description: 'User not found.' })
+  @Get('resend-verification-email/:email')
+  async resendVerificationEmail(
+    @Param('email') email: string,
+  ){
+    return await this.authService.resendVerificationEmail(email);
   }
 
   @ApiOperation({ summary: 'Request password reset' })
-  @ApiResponse({ status: 200, description: 'Reset link sent' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  @Post('forgot_password')
-  async forgotPassword(@Body('email') email: string) {
-    return this.authService.forgotPassword(email);
+  @ApiBody({ schema: { example: { email: 'user@example.com' } } })
+  @ApiResponse({
+    status: 200,
+    description: 'Password reset link sent.',
+  })
+  @ApiResponse({ status: 404, description: 'User not found.' })
+  @Post('forgot-password')
+  async forgotPassword(@Body('email') email: string){
+    return await this.authService.forgotPassword(email);
   }
 
-  @ApiOperation({ summary: 'Reset password using token' })
-  @ApiResponse({ status: 200, description: 'Password reset successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid data' })
-  @ApiResponse({ status: 401, description: 'Invalid or expired token' })
-  @Post('reset_password')
-  async resetPassword(@Body() dto: ResetPassDto) {
-    return this.authService.resetPassword(dto);
+  @ApiOperation({ summary: 'Reset password' })
+  @ApiBody({ type: ResetPassDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Password reset successfully.',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid or expired token.' })
+  @ApiResponse({ status: 404, description: 'User not found.' })
+  @Post('reset-password')
+  async resetPassword(@Body() dto: ResetPassDto){
+    return await this.authService.resetPassword(dto);
   }
 }

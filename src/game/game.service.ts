@@ -58,11 +58,16 @@ export class GameService {
 
   async delete_game(id: string) {
     try {
-      await this.prisma.$transaction(async (prisma) => {
-        await this.prisma.game_Type.delete({ where: { id } });
-        await this.prisma.court_Game_Type.deleteMany({
+       return await this.prisma.$transaction(async (prisma) => {
+      const deleted_associations=   await this.prisma.court_Game_Type.deleteMany({
           where: { game_type_id: id },
         });
+        const deleted_game = await this.prisma.game_Type.delete({ where: { id } });
+      
+        //return the game and number of deleted assiciations
+
+        return {game:deleted_game, associations:deleted_associations};
+      
       });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -96,19 +101,20 @@ export class GameService {
     const { court_id, game_type_ids } = dto;
   
     try {
-      const court = await this.prisma.court.findFirst(
-        { where: { id: court_id } }
-      );
-      if (!court) {        
+      // Verify that the court exists
+      const court = await this.prisma.court.findFirst({
+        where: { id: court_id },
+      });
+      if (!court) {
         throw new NotFoundException(`Court with ID ${court_id} not found`);
-      } 
-      
-           // If no game IDs are provided, delete all existing game links
+      }
+  
+      // If no game IDs are provided, delete all existing game links
       if (game_type_ids.length === 0) {
-        await this.prisma.court_Game_Type.deleteMany({
+        const deletedGames = await this.prisma.court_Game_Type.deleteMany({
           where: { court_id },
         });
-        return { message: 'All game links for the court have been deleted' };
+        return { message: 'All game links for the court have been deleted', deletedGames };
       }
   
       // Verify that all game IDs exist
@@ -125,21 +131,32 @@ export class GameService {
         game_type_id,
       }));
   
-      // Use createMany if there are multiple entries, otherwise use create
-      if (data.length > 1) {
-        // Link the games to the court using createMany
-        const courtGameTypes = await this.prisma.court_Game_Type.createMany({
-          data,
-          skipDuplicates: true, // Optional: skips duplicates if any
+      // Use a transaction to delete existing links and add new ones
+      const result = await this.prisma.$transaction(async (prisma) => {
+        // Delete existing game links
+        const deletedGames = await prisma.court_Game_Type.deleteMany({
+          where: { court_id },
         });
-        return courtGameTypes;
-      } else {
-        // Link the single game to the court using create
-        const courtGameType = await this.prisma.court_Game_Type.create({
-          data: data[0],
-        });
-        return courtGameType;
-      }
+  
+        // Create new game links
+        let addedGames;
+        if (data.length > 1) {
+          // Use createMany if there are multiple entries
+          addedGames = await prisma.court_Game_Type.createMany({
+            data,
+            skipDuplicates: true, // Optional: skips duplicates if any
+          });
+        } else {
+          // Use create if there is only one entry
+          addedGames = await prisma.court_Game_Type.create({
+            data: data[0],
+          });
+        }
+  
+        return { deletedGames, addedGames };
+      });
+  
+      return result;
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -161,17 +178,19 @@ export class GameService {
   
     try {
       // Verify that the court exists
-      const court = await this.courtService.get_court_details(court_id);
+      const court = await this.prisma.court.findFirst({
+        where: { id: court_id },
+      });
       if (!court) {
         throw new NotFoundException(`Court with ID ${court_id} not found`);
       }
   
       // If no game IDs are provided, delete all existing game links
       if (game_type_ids.length === 0) {
-        await this.prisma.court_Game_Type.deleteMany({
+        const deletedGames = await this.prisma.court_Game_Type.deleteMany({
           where: { court_id },
         });
-        return { message: 'All game links for the court have been deleted' };
+        return { message: 'All game links for the court have been deleted', deletedGames };
       }
   
       // Verify that all game IDs exist
@@ -188,29 +207,32 @@ export class GameService {
         game_type_id,
       }));
   
-      // Update the games for the court using a transaction
-      return await this.prisma.$transaction(async (prisma) => {
+      // Use a transaction to delete existing links and add new ones
+      const result = await this.prisma.$transaction(async (prisma) => {
         // Delete existing game links
-        await prisma.court_Game_Type.deleteMany({
+        const deletedGames = await prisma.court_Game_Type.deleteMany({
           where: { court_id },
         });
   
         // Create new game links
+        let addedGames;
         if (data.length > 1) {
           // Use createMany if there are multiple entries
-          const courtGameTypes = await prisma.court_Game_Type.createMany({
+          addedGames = await prisma.court_Game_Type.createMany({
             data,
             skipDuplicates: true, // Optional: skips duplicates if any
           });
-          return courtGameTypes;
         } else {
           // Use create if there is only one entry
-          const courtGameType = await prisma.court_Game_Type.create({
+          addedGames = await prisma.court_Game_Type.create({
             data: data[0],
           });
-          return courtGameType;
         }
+  
+        return { deletedGames, addedGames };
       });
+  
+      return result;
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&

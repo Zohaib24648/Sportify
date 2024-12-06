@@ -50,6 +50,10 @@ export class GameService {
           id: id,
         },
       });
+      if (!games) {
+        throw new NotFoundException('Game not found');
+        }
+        
       const total_bookings_for_game = await this.prisma.booking.count({
         where: {
           slot: {court: {game_types: {some: {game_type_id: id}}}},

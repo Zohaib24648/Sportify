@@ -281,9 +281,9 @@ if (start_time || end_time) {
                 court: {
                   include: {
                     court_specs: true,
-                    game_types: {
+                    game_links: {
                       include: {
-                        game_type: true
+                        game: true
                       }
                     }
                   }

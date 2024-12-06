@@ -1,8 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// This is your Prisma schema file
 
 generator client {
   provider = "prisma-client-js"
@@ -73,8 +69,8 @@ enum COURT_TYPE {
   indoor
   outdoor
   multipurpose
-
 }
+
 model User {
   id                   String    @id @default(uuid())
   user_id              Int       @unique @default(autoincrement())
@@ -83,10 +79,10 @@ model User {
   email_verified       Boolean   @default(false)
   phone_verified       Boolean   @default(false)
   password_hash        String
-  user_pfp_link        String    @default("https://www.shutterstock.com/shutterstock/photos/1677509740/display_1500/stock-vector-default-avatar-profile-icon-social-media-user-vector-1677509740.jpg")
+  user_pfp_link        String    @default("https://www.shutterstock.com/default-avatar.png")
   user_phone           String    @unique
   secondary_user_phone String?
-  roles                 ROLE[]    @default([user])
+  roles                ROLE[]    @default([user])
   created_at           DateTime  @default(now())
   updated_at           DateTime  @updatedAt
   bookings             Booking[]
@@ -96,47 +92,45 @@ model User {
   @@index([user_phone])
   @@index([user_id])
 }
-//outdoor , indoor , multiground
+
 model Court {
-  id                 String               @id @default(uuid())
-  court_id           Int                  @unique @default(autoincrement())
+  id                 String             @id @default(uuid())
+  court_id           Int                @unique @default(autoincrement())
   name               String
-  is_deleted         Boolean              @default(false)
+  is_deleted         Boolean            @default(false)
   description        String?
   court_location     String
   hourly_rate        Int
   min_down_payment   Int
-  court_type         COURT_TYPE           
-  created_at         DateTime             @default(now())
-  updated_at         DateTime             @updatedAt
+  court_type         COURT_TYPE
+  created_at         DateTime           @default(now())
+  updated_at         DateTime           @updatedAt
   court_specs        Court_Specs[]
   court_availability Court_Availability[]
   court_media        Court_Media[]
   slots              Slot[]
   reviews            Review[]
-  game_types         Court_Game_Type[]
+  game_links         CourtGameLink[]
   close_dates        Court_Close_Dates[]
 }
 
-//implement Media uploading
-model Game_Type {
-  id     String            @id @default(uuid())
-  name   String            @unique
+model Game {
+  id          String          @id @default(uuid())
+  name        String          @unique
   description String?
-  category  GAME_TYPE
-  person  String?          @default("5v5")
-  courts Court_Game_Type[]
+  category    GAME_TYPE
+  person      String?         @default("5v5")
+  courts      CourtGameLink[]
 }
-//status , active , inactive 
 
-model Court_Game_Type {
-  id           String    @id @default(uuid())
-  court_id     String
-  game_type_id String
-  court        Court     @relation(fields: [court_id], references: [id])
-  game_type    Game_Type @relation(fields: [game_type_id], references: [id])
+model CourtGameLink {
+  id       String    @id @default(uuid())
+  court_id String
+  game_id  String
+  court    Court     @relation(fields: [court_id], references: [id])
+  game     Game      @relation(fields: [game_id], references: [id])
 
-  @@unique([court_id, game_type_id])
+  @@unique([court_id, game_id])
 }
 
 model Court_Specs {
@@ -169,8 +163,7 @@ model Court_Close_Dates {
   court_id   String
   start_time String
   end_time   String
-
-  court Court @relation(fields: [court_id], references: [id])
+  court      Court  @relation(fields: [court_id], references: [id])
 }
 
 model Slot {

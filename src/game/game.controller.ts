@@ -96,6 +96,17 @@ export class GameController {
   }
   
 
+  @ApiOperation({ summary: 'Retrieve a game by ID (Admin and User)' })
+  @ApiResponse({ status: 200, description: 'Game retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Game not found' })
+  @ApiBearerAuth()
+  @Roles('admin', 'user')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Get('get_game/:id')
+  get_game(@Param('id') id: string) {
+    return this.game_service.get_game(id);
+  }
+
   // @ApiOperation({ summary: 'Delete a game from a court' })
   // @ApiResponse({
   //   status: 200,
@@ -122,3 +133,5 @@ export class GameController {
     return this.game_service.get_court_games(id);
   }
 }
+
+

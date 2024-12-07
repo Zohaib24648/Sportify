@@ -35,7 +35,8 @@ enum MEDIA_TYPE {
 enum GAME_TYPE {
   indoor
   outdoor
-}
+  both 
+  }
 
 enum REVIEW_STATUS {
   pending

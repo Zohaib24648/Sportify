@@ -39,14 +39,14 @@ export class AdminController {
     return this.admin_service.updateUser(id, dto);
   }
 
-  @ApiOperation({ summary: 'delete a  user (Admin Only)' })
-  @ApiBearerAuth()
-  @Roles('admin')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Delete('delete_user/:id')
-  deleteUser(@Param('id') id: string) {
-    return this.admin_service.deleteUser(id);
-  }
+  // @ApiOperation({ summary: 'delete a  user (Admin Only)' })
+  // @ApiBearerAuth()
+  // @Roles('admin')
+  // @UseGuards(AuthGuard('jwt'), RolesGuard)
+  // @Delete('delete_user/:id')
+  // deleteUser(@Param('id') id: string) {
+  //   return this.admin_service.deleteUser(id);
+  // }
 
   @ApiOperation({ summary: 'Retrieve a list of users (Admin Only)' })
   @ApiBearerAuth()

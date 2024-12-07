@@ -127,13 +127,20 @@ export class CourtService {
     }
   }
 
-  async updateCourt(id: string, dto: UpdateCourtDto) {
+  async updateCourt(id: string, dto: CourtDto) {
     // this.validateCourtData(dto);
 
     try {
 
       const court = this.get_court_details(id);
-      //match the values provided in the dto with the values in the court object and update the court object
+      if (!court) {
+        throw new NotFoundException(`Court with ID ${id} not found`);
+      }
+
+      return await this.prisma.court.update({
+        where: { id },
+        data: dto,
+      });
 
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -148,7 +155,6 @@ export class CourtService {
     }
   }
 
-  //Not Correct
   async deleteCourt(id: string){
     try {
       const court = await this.prisma.court.findUnique({ where: { id } });
@@ -161,7 +167,10 @@ export class CourtService {
         data : { is_deleted: true }
       });
       //delete availabilities , games , and other related tables  
-      
+      await this.prisma.court_Availability.deleteMany({ where: { court_id: id } });
+      await this.prisma.courtGameLink.deleteMany({ where: { court_id: id } });
+      await this.prisma.court_Media.deleteMany({ where: { court_id: id } });
+      await this.prisma.court_Specs.deleteMany({ where: { court_id: id } });
 
       return 'Court deleted successfully';
     } catch (error) {
@@ -412,16 +421,16 @@ export class CourtService {
     });
   }
 
-  updateCourtMedia(id: string, dto: UpdateCourtMediaDto) {
-    const { media_type, media_link } = dto;
-    return this.prisma.court_Media.update({
-      where: { id },
-      data: {
-        media_link,
-        media_type,
-      },
-    });
-  }
+  // updateCourtMedia(id: string, dto: UpdateCourtMediaDto) {
+  //   const { media_type, media_link } = dto;
+  //   return this.prisma.court_Media.update({
+  //     where: { id },
+  //     data: {
+  //       media_link,
+  //       media_type,
+  //     },
+  //   });
+  // }
 
   deleteCourtMedia(id: string) {
     try {

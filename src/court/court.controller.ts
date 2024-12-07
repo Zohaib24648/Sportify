@@ -58,7 +58,6 @@ export class CourtController {
   @ApiResponse({ status: 404, description: 'No courts found' })
   @ApiResponse({ status: 500, description: 'Undefined Error' })
   @ApiBearerAuth()
-
   //Get Courts
   @Roles('admin', 'user')
   @UseGuards(AuthGuard('jwt'))
@@ -285,17 +284,17 @@ export class CourtController {
     return this.court_service.getCourtMedia(id);
   }
 
-  @ApiOperation({
-    summary: 'update media of a court , takes media.id as input',
-  })
-  @ApiBearerAuth()
-  @Roles('admin')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Post('update_court_media/:id')
-  update_court_media(
-    @Param('id') id: string,
-    @Body() dto: UpdateCourtMediaDto,
-  ) {
-    return this.court_service.updateCourtMedia(id, dto);
-  }
+  // @ApiOperation({
+  //   summary: 'update media of a court , takes media.id as input',
+  // })
+  // @ApiBearerAuth()
+  // @Roles('admin')
+  // @UseGuards(AuthGuard('jwt'), RolesGuard)
+  // @Post('update_court_media/:id')
+  // update_court_media(
+  //   @Param('id') id: string,
+  //   @Body() dto: UpdateCourtMediaDto,
+  // ) {
+  //   return this.court_service.updateCourtMedia(id, dto);
+  // }
 }

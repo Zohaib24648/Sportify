@@ -91,7 +91,7 @@ export class GameController {
   @ApiBearerAuth()
   @Roles('admin')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Put('update_court_games/:id')
+  @Put('update_court_games')
   update_court_games(@Body() dto: AddGameCourtDto) {
     return this.game_service.updateCourtGames( dto);
   }

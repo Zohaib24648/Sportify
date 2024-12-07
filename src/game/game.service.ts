@@ -194,92 +194,74 @@ export class GameService {
 
 
   
-  async updateCourtGames(dto: AddGameCourtDto) {
-    const { court_id, game_ids } = dto;
-  
-    // Step 1: Validate Court Existence
-    const court = await this.prisma.court.findUnique({
-      where: { id: court_id },
-    });
-    if (!court) {
-      throw new NotFoundException(`Court with ID ${court_id} not found`);
-    }
-  
-    // Step 2: Validate Game IDs
-    const existingGames = await this.prisma.game.findMany({
-      where: { id: { in: game_ids } },
-      select: { id: true },
-    });
-    const existingGameIds = existingGames.map((game) => game.id);
-    const invalidGameIds = game_ids.filter(
-      (id) => !existingGameIds.includes(id),
-    );
-    if (invalidGameIds.length > 0) {
-      throw new NotFoundException(
-        `Games with IDs ${invalidGameIds.join(', ')} not found`,
-      );
-    }
-  
-    try {
-      // Step 3: Perform Transaction
-      return await this.prisma.$transaction(async (prisma) => {
-        // Fetch current game associations
-        const currentGameLinks = await prisma.courtGameLink.findMany({
-          where: { court_id },
-          select: { game_id: true },
-        });
-        const currentGameIds = currentGameLinks.map((link) => link.game_id);
-  
-        // Determine games to add and remove
-        const gamesToAdd = game_ids.filter(
-          (id) => !currentGameIds.includes(id),
-        );
-        const gamesToRemove = currentGameIds.filter(
-          (id) => !game_ids.includes(id),
-        );
-  
-        // Step 4a: Delete Associations Not in DTO
-        if (gamesToRemove.length > 0) {
-          await prisma.courtGameLink.deleteMany({
-            where: {
-              court_id,
-              game_id: { in: gamesToRemove },
-            },
-          });
-        }
-  
-        // Step 4b: Add New Associations from DTO
-        if (gamesToAdd.length > 0) {
-          const newAssociations = gamesToAdd.map((game_id) => ({
-            court_id,
-            game_id,
-          }));
-          await prisma.courtGameLink.createMany({
-            data: newAssociations,
-            skipDuplicates: true, // Prevents errors if association already exists
-          });
-        }
-  
-        return { message: 'Court games updated successfully' };
-      });
-    } catch (error) {
-      // Handle specific Prisma errors if needed
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      ) {
-        throw new ConflictException(
-          'One or more game associations already exist.',
-        );
-      }
-  
-      // General error handling
-      throw new InternalServerErrorException(
-        'Failed to update court games',
-        error.message,
-      );
-    }
+// src/game/game.service.ts
+
+async updateCourtGames(dto: AddGameCourtDto) {
+  const { court_id, game_ids } = dto;
+
+  // Step 1: Validate Court Existence
+  const court = await this.prisma.court.findUnique({
+    where: { id: court_id },
+  });
+  if (!court) {
+    throw new NotFoundException(`Court with ID ${court_id} not found`);
   }
+
+  // Step 2: Validate Game IDs
+  const validGames = await this.prisma.game.findMany({
+    where: { id: { in: game_ids } },
+    select: { id: true },
+  });
+  const validGameIds = validGames.map((game) => game.id);
+  const invalidGameIds = game_ids.filter((id) => !validGameIds.includes(id));
+  if (invalidGameIds.length > 0) {
+    throw new NotFoundException(
+      `Games with IDs ${invalidGameIds.join(', ')} not found`,
+    );
+  }
+
+  // Step 3: Fetch Current Associations
+  const currentAssociations = await this.prisma.courtGameLink.findMany({
+    where: { court_id },
+    select: { game_id: true },
+  });
+
+
+  const currentGameIds = currentAssociations.map((link) => link.game_id);
+
+  // Step 4: Determine Changes
+  const gamesToAdd = game_ids.filter((id) => !currentGameIds.includes(id));
+  const gamesToRemove = currentGameIds.filter((id) => !game_ids.includes(id));
+
+  // Step 5: Update Associations
+  await this.prisma.$transaction(async (prisma) => {
+    // Remove associations
+    if (gamesToRemove.length > 0) {
+      await prisma.courtGameLink.deleteMany({
+        where: {
+          court_id,
+          game_id: { in: gamesToRemove },
+        },
+      });
+    }
+
+    // Add new associations
+    if (gamesToAdd.length > 0) {
+      const newLinks = gamesToAdd.map((game_id) => ({
+        court_id,
+        game_id,
+      }));
+      await prisma.courtGameLink.createMany({
+        data: newLinks,
+        skipDuplicates: true,
+      });
+    }
+  });
+
+  return { message: 'Court games updated successfully' };
+}
+
+
   async get_court_games(id: string) {
     try {
       const court_games = await this.prisma.courtGameLink.findMany({
@@ -298,28 +280,4 @@ export class GameService {
       );
     }
   }
-
-  // async delete_court_game(dto: AddGameCourtDto) {
-  //   try {
-  //     const court_game = await this.prisma.court_Game_Type.deleteMany({
-  //       where: {
-  //         ...dto,
-  //       },
-  //     });
-
-  //     console.log('Game deleted successfully:', court_game);
-  //     return court_game;
-  //   } catch (error) {
-  //     if (error instanceof Prisma.PrismaClientKnownRequestError) {
-  //       if (error.code === 'P2025') {
-  //         throw new Error('Game type or court not found.');
-  //       }
-  //     }
-
-  //     throw new InternalServerErrorException(
-  //       'An error occurred while deleting the game from the court.',
-  //       error.message,
-  //     );
-  //   }
-  // }
 }

@@ -8,7 +8,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { DAY, Prisma } from '@prisma/client';
-import { CourtDto } from 'src/court/dto/court.dto';
+import { CourtDto, UpdateCourtDto } from 'src/court/dto/court.dto';
 import { CourtSpecDto } from 'src/court/dto/court_spec.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CourtAvailabilityDto } from './dto/courtavailability.dto';
@@ -52,9 +52,9 @@ export class CourtService {
               media_link: item.media_link,
             })),
           },
-          game_types: {
+          game_links: {
             create: games.map((gameId) => ({
-              game_type: {
+              game: {
                 connect: { id: gameId },
               },
             })),
@@ -63,7 +63,7 @@ export class CourtService {
         include: {
           court_availability: true,
           court_media: true,
-          game_types: true,
+          game_links: true,
         },
       });
 
@@ -106,9 +106,9 @@ export class CourtService {
           court_specs: true,
           court_availability: true,
           court_media: true,
-          game_types: {
+          game_links: {
             include: {
-              game_type: true,
+              game: true,
             },
           },
         },
@@ -127,19 +127,14 @@ export class CourtService {
     }
   }
 
-  async updateCourt(id: string, dto: CourtDto) {
-    this.validateCourtData(dto);
+  async updateCourt(id: string, dto: UpdateCourtDto) {
+    // this.validateCourtData(dto);
 
     try {
-      const updatedCourt = await this.prisma.court.update({
-        where: {
-          id: id,
-        },
-        data: {
-          ...dto,
-        },
-      });
-      return updatedCourt;
+
+      const court = this.get_court_details(id);
+      //match the values provided in the dto with the values in the court object and update the court object
+
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2025') {
@@ -209,89 +204,89 @@ export class CourtService {
     }
   }
 
-  async get_court_specs(court_id: string) {
-    try {
-      const court = await this.prisma.court.findUnique({
-        where: { id: court_id },
-      });
-      if (!court) {
-        throw new NotFoundException(`Court with ID ${court_id} not found`);
-      }
+  // async get_court_specs(court_id: string) {
+  //   try {
+  //     const court = await this.prisma.court.findUnique({
+  //       where: { id: court_id },
+  //     });
+  //     if (!court) {
+  //       throw new NotFoundException(`Court with ID ${court_id} not found`);
+  //     }
 
-      return await this.prisma.court_Specs.findMany({ where: { court_id } });
-    } catch (error) {
-      throw new InternalServerErrorException(
-        'Failed to retrieve court specifications',
-        error.message,
-      );
-    }
-  }
+  //     return await this.prisma.court_Specs.findMany({ where: { court_id } });
+  //   } catch (error) {
+  //     throw new InternalServerErrorException(
+  //       'Failed to retrieve court specifications',
+  //       error.message,
+  //     );
+  //   }
+  // }
 
-  async add_court_spec(court_id: string, specsdto: CourtSpecDto) {
-    try {
-      const court = await this.prisma.court.findUnique({
-        where: { id: court_id },
-      });
-      if (!court) {
-        throw new NotFoundException(`Court with ID ${court_id} not found`);
-      }
+  // async add_court_spec(court_id: string, specsdto: CourtSpecDto) {
+  //   try {
+  //     const court = await this.prisma.court.findUnique({
+  //       where: { id: court_id },
+  //     });
+  //     if (!court) {
+  //       throw new NotFoundException(`Court with ID ${court_id} not found`);
+  //     }
 
-      return await this.prisma.court_Specs.create({
-        data: {
-          ...specsdto,
-          court_id,
-        },
-      });
-    } catch (error) {
-      throw new InternalServerErrorException(
-        'Failed to add court specification',
-        error.message,
-      );
-    }
-  }
+  //     return await this.prisma.court_Specs.create({
+  //       data: {
+  //         ...specsdto,
+  //         court_id,
+  //       },
+  //     });
+  //   } catch (error) {
+  //     throw new InternalServerErrorException(
+  //       'Failed to add court specification',
+  //       error.message,
+  //     );
+  //   }
+  // }
 
-  async update_court_spec(id: string, dto: CourtSpecDto) {
-    try {
-      const court_spec = await this.prisma.court_Specs.findUnique({
-        where: { id },
-      });
-      if (!court_spec) {
-        throw new NotFoundException(
-          `Court specification with ID ${id} not found`,
-        );
-      }
+  // async update_court_spec(id: string, dto: CourtSpecDto) {
+  //   try {
+  //     const court_spec = await this.prisma.court_Specs.findUnique({
+  //       where: { id },
+  //     });
+  //     if (!court_spec) {
+  //       throw new NotFoundException(
+  //         `Court specification with ID ${id} not found`,
+  //       );
+  //     }
 
-      return await this.prisma.court_Specs.update({
-        where: { id },
-        data: dto,
-      });
-    } catch (error) {
-      throw new InternalServerErrorException(
-        'Failed to update court specification',
-        error.message,
-      );
-    }
-  }
+  //     return await this.prisma.court_Specs.update({
+  //       where: { id },
+  //       data: dto,
+  //     });
+  //   } catch (error) {
+  //     throw new InternalServerErrorException(
+  //       'Failed to update court specification',
+  //       error.message,
+  //     );
+  //   }
+  // }
 
-  async delete_court_spec(id: string) {
-    try {
-      const court_spec = await this.prisma.court_Specs.findUnique({
-        where: { id },
-      });
-      if (!court_spec) {
-        throw new NotFoundException(
-          `Court specification with ID ${id} not found`,
-        );
-      }
+  // async delete_court_spec(id: string) {
+  //   try {
+  //     const court_spec = await this.prisma.court_Specs.findUnique({
+  //       where: { id },
+  //     });
+  //     if (!court_spec) {
+  //       throw new NotFoundException(
+  //         `Court specification with ID ${id} not found`,
+  //       );
+  //     }
 
-      return await this.prisma.court_Specs.delete({ where: { id } });
-    } catch (error) {
-      throw new InternalServerErrorException(
-        'Failed to delete court specification',
-        error.message,
-      );
-    }
-  }
+  //     return await this.prisma.court_Specs.delete({ where: { id } });
+  //   } catch (error) {
+  //     throw new InternalServerErrorException(
+  //       'Failed to delete court specification',
+  //       error.message,
+  //     );
+  //   }
+  // }
 
   async updateCourtAvailability(id: string, dto: updateCourtAvailabilityDto) {
     const { start_time, end_time } = dto;

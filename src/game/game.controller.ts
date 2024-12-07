@@ -12,6 +12,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import { UpdateGameCourtDto } from './dto/updategamecourt.dto';
 
 @ApiTags('Games')
 @Controller('game')
@@ -67,19 +68,19 @@ export class GameController {
   
   
   
-  @ApiOperation({ summary: 'Add multiple games to a court' })
-  @ApiResponse({ status: 201, description: 'Games successfully added to court' })
-  @ApiResponse({
-    status: 409,
-    description: 'Conflict - One or more games already linked to this court',
-  })
-  @ApiBearerAuth()
-  @Roles('admin')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Post('add_games_to_court')
-  add_games_to_court(@Body() dto: AddGameCourtDto) {
-    return this.game_service.addGamesToCourt(dto);
-  }
+  // @ApiOperation({ summary: 'Add multiple games to a court' })
+  // @ApiResponse({ status: 201, description: 'Games successfully added to court' })
+  // @ApiResponse({
+  //   status: 409,
+  //   description: 'Conflict - One or more games already linked to this court',
+  // })
+  // @ApiBearerAuth()
+  // @Roles('admin')
+  // @UseGuards(AuthGuard('jwt'), RolesGuard)
+  // @Post('add_games_to_court')
+  // add_games_to_court(@Body() dto: AddGameCourtDto) {
+  //   return this.game_service.addGamesToCourt(dto);
+  // }
 
   @ApiOperation({ summary: 'Update games for a court' })
   @ApiResponse({
@@ -90,9 +91,9 @@ export class GameController {
   @ApiBearerAuth()
   @Roles('admin')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Put('update_court_games')
+  @Put('update_court_games/:id')
   update_court_games(@Body() dto: AddGameCourtDto) {
-    return this.game_service.updateCourtGames(dto);
+    return this.game_service.updateCourtGames( dto);
   }
   
 

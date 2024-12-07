@@ -5,16 +5,18 @@ import { IsArray, IsNotEmpty, IsString } from 'class-validator';
 
 export class AddGameCourtDto {
   @ApiProperty({
-    description: 'The court ID where the games will be played',
-    example: '5678',
+    description: 'The ID of the court',
+    example: 'court-uuid',
   })
   @IsString()
+  @IsNotEmpty()
   court_id: string;
 
   @ApiProperty({
-    description: 'Array of game type IDs to be linked to the court',
-    example: ['1234', '5678'],
+    description: 'Array of game IDs to associate with the court',
+    example: ['game-uuid-1', 'game-uuid-2'],
   })
   @IsArray()
-  game_type_ids: string[];
+  @IsNotEmpty()
+  game_ids: string[];
 }

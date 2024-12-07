@@ -202,61 +202,61 @@ export class CourtController {
     return this.court_service.get_court_details(id);
   }
 
-  // Add Court Specs
-  @ApiOperation({ summary: 'Add specifications to a court' })
-  @ApiResponse({
-    status: 201,
-    description: 'Court specifications added successfully',
-  })
-  @ApiResponse({ status: 404, description: 'Court not found' })
-  @ApiBearerAuth()
-  @Roles('admin')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Post('add_court_specs/:id')
-  add_court_specs(@Param('id') id: string, @Body() dto: CourtSpecDto) {
-    return this.court_service.add_court_spec(id, dto);
-  }
+  // // Add Court Specs
+  // @ApiOperation({ summary: 'Add specifications to a court' })
+  // @ApiResponse({
+  //   status: 201,
+  //   description: 'Court specifications added successfully',
+  // })
+  // @ApiResponse({ status: 404, description: 'Court not found' })
+  // @ApiBearerAuth()
+  // @Roles('admin')
+  // @UseGuards(AuthGuard('jwt'), RolesGuard)
+  // @Post('add_court_specs/:id')
+  // add_court_specs(@Param('id') id: string, @Body() dto: CourtSpecDto) {
+  //   return this.court_service.add_court_spec(id, dto);
+  // }
 
-  //Get Court Specs
-  @ApiOperation({ summary: 'Retrieve specifications of a specific court' })
-  @ApiResponse({ status: 200, description: 'List of court specifications' })
-  @ApiResponse({ status: 404, description: 'Court not found' })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
-  @Get('get_court_specs/:id')
-  get_court_specs(@Param('id') id: string) {
-    return this.court_service.get_court_specs(id);
-  }
+  // //Get Court Specs
+  // @ApiOperation({ summary: 'Retrieve specifications of a specific court' })
+  // @ApiResponse({ status: 200, description: 'List of court specifications' })
+  // @ApiResponse({ status: 404, description: 'Court not found' })
+  // @ApiBearerAuth()
+  // @UseGuards(AuthGuard('jwt'))
+  // @Get('get_court_specs/:id')
+  // get_court_specs(@Param('id') id: string) {
+  //   return this.court_service.get_court_specs(id);
+  // }
 
-  //Delete Court Specs
-  @ApiOperation({ summary: 'Delete a court specification by ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Court specification deleted successfully',
-  })
-  @ApiResponse({ status: 404, description: 'Court specification not found' })
-  @ApiBearerAuth()
-  @Roles('admin')
-  @UseGuards(AuthGuard('jwt'))
-  @Delete('delete_court_spec/:id')
-  delete_court_spec(@Param('id') id: string) {
-    return this.court_service.delete_court_spec(id);
-  }
+  // //Delete Court Specs
+  // @ApiOperation({ summary: 'Delete a court specification by ID' })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Court specification deleted successfully',
+  // })
+  // @ApiResponse({ status: 404, description: 'Court specification not found' })
+  // @ApiBearerAuth()
+  // @Roles('admin')
+  // @UseGuards(AuthGuard('jwt'))
+  // @Delete('delete_court_spec/:id')
+  // delete_court_spec(@Param('id') id: string) {
+  //   return this.court_service.delete_court_spec(id);
+  // }
 
-  // Update Court Specs
-  @ApiOperation({ summary: 'Update a court specification by ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Court specification updated successfully',
-  })
-  @ApiResponse({ status: 404, description: 'Court specification not found' })
-  @ApiBearerAuth()
-  @Roles('admin')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Post('update_court_specs/:id')
-  update_court_specs(@Param('id') id: string, @Body() dto: CourtSpecDto) {
-    return this.court_service.update_court_spec(id, dto);
-  }
+  // // Update Court Specs
+  // @ApiOperation({ summary: 'Update a court specification by ID' })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Court specification updated successfully',
+  // })
+  // @ApiResponse({ status: 404, description: 'Court specification not found' })
+  // @ApiBearerAuth()
+  // @Roles('admin')
+  // @UseGuards(AuthGuard('jwt'), RolesGuard)
+  // @Post('update_court_specs/:id')
+  // update_court_specs(@Param('id') id: string, @Body() dto: CourtSpecDto) {
+  //   return this.court_service.update_court_spec(id, dto);
+  // }
 
   @ApiOperation({ summary: 'Add media to a court' })
   @ApiBearerAuth()

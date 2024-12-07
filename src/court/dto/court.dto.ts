@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { PartialType } from '@nestjs/mapped-types';  
 import { COURT_TYPE } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
@@ -60,3 +61,5 @@ court_type: COURT_TYPE;
   @IsNotEmpty()
   min_down_payment: number;
 }
+
+export class UpdateCourtDto extends PartialType(CourtDto) {}

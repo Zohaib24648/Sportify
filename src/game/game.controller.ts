@@ -67,20 +67,6 @@ export class GameController {
 
   
   
-  
-  // @ApiOperation({ summary: 'Add multiple games to a court' })
-  // @ApiResponse({ status: 201, description: 'Games successfully added to court' })
-  // @ApiResponse({
-  //   status: 409,
-  //   description: 'Conflict - One or more games already linked to this court',
-  // })
-  // @ApiBearerAuth()
-  // @Roles('admin')
-  // @UseGuards(AuthGuard('jwt'), RolesGuard)
-  // @Post('add_games_to_court')
-  // add_games_to_court(@Body() dto: AddGameCourtDto) {
-  //   return this.game_service.addGamesToCourt(dto);
-  // }
 
   @ApiOperation({ summary: 'Update games for a court' })
   @ApiResponse({

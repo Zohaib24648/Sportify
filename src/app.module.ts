@@ -11,6 +11,8 @@ import { SlotModule } from './slot/slot.module';
 import { GameModule } from './game/game.module';
 import { AdminModule } from './admin/admin.module';
 import { MailModule } from './mail/mail.module';
+import { UploadController } from './upload/upload.controller';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { MailModule } from './mail/mail.module';
     GameModule,
     AdminModule,
     MailModule,
+    UploadModule,
   ],
+  controllers: [UploadController],
 })
 export class AppModule {}

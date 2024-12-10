@@ -16,6 +16,8 @@ import { Roles } from 'src/auth/guard/roles.decorator';
 import { UpdateUserDto } from './dto/updateuser.dto';
 import { ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { TimeDto } from 'src/slot/dto/time.dto';
+import { EmailAllUsersDto } from './dto/emailallusers.dto';
+import { EmailUserDto } from './dto/emailuser.dto';
 
 @Controller('admin')
 export class AdminController {
@@ -65,4 +67,24 @@ export class AdminController {
   getdashboard(@Body() dto: TimeDto) {
     return this.admin_service.getDashboardData(dto);
   }
+
+  @ApiOperation({ summary: 'Email all users (Admin Only)' })
+  @ApiBearerAuth()
+  @Roles('admin')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Post('email_all')
+  emailAllUsers(@Body() dto: EmailAllUsersDto) {
+    return this.admin_service.email_all_users(dto);
+  }
+
+  @ApiOperation({ summary: 'Email a user (Admin Only)' })
+  @ApiBearerAuth()
+  @Roles('admin')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Post('email_user')
+  emailUser(@Body() dto: EmailUserDto) {
+    return this.admin_service.emailuser(dto);
+  }
+
+
 }

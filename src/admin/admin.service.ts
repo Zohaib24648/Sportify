@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { SignupDto } from 'src/auth/dto';
 import { AuthService } from 'src/auth/auth.service';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -6,12 +6,16 @@ import { UpdateUserDto } from './dto/updateuser.dto';
 import * as argon from 'argon2';
 import { TimeDto } from 'src/slot/dto/time.dto';
 import dayjs from 'dayjs';
+import { MailService } from 'src/mail/mail.service';
+import { EmailAllUsersDto } from './dto/emailallusers.dto';
+import { EmailUserDto } from './dto/emailuser.dto';
 
 @Injectable()
 export class AdminService {
   constructor(
     private readonly authService: AuthService,
     private readonly prisma: PrismaService,
+    private readonly mailService: MailService
   ) {}
 
   //Create User
@@ -129,4 +133,66 @@ export class AdminService {
       total_bookings,
     };
   }
+
+
+  // Then update the service method
+async email_all_users(dto: EmailAllUsersDto) {
+  try {
+      const { subject, content, roles } = dto;
+      
+      const users = await this.prisma.user.findMany({
+          where: {
+              roles: {
+                  hasSome: roles // This is the correct Prisma operator for array contains
+              }
+          }
+      });
+
+      if (users.length === 0) {
+          return { message: 'No users found with specified roles', count: 0 };
+      }
+
+      const emailPromises = users.map(user => 
+          this.mailService.sendEmail(user.email, subject, content)
+      );
+
+      await Promise.all(emailPromises);
+
+      return { 
+          message: 'Email sent successfully', 
+          count: users.length,
+          roles: roles 
+      };
+  } catch (error) {
+      throw new InternalServerErrorException(
+          'Failed to send emails',
+          error.message
+      );
+  }
 }
+
+
+async emailuser (dto: EmailUserDto) {
+  const { id, subject, content } = dto;
+  try {
+      const user = await this.prisma.user.findUnique({
+          where: {
+              id: id
+          }
+      });
+
+      if (!user) {
+          throw new NotFoundException('User not found');
+      }
+
+      await this.mailService.sendEmail(user.email, subject, content);
+
+      return { message: 'Email sent successfully' };
+  } catch (error) {
+      throw new InternalServerErrorException(
+          'Failed to send email',
+          error.message
+      );
+  }
+
+}}

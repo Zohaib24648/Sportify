@@ -52,7 +52,22 @@ export class ReviewService {
     async getallreviews(){
         try {
             
-        return await this.prisma.review.findMany();
+        return await this.prisma.review.findMany(
+            {
+                include:{
+                    user: {
+                        select:{
+                            name: true,
+                        }
+                    },
+                    court: {
+                        select: {
+                            name: true,
+                        }
+                    }
+                }
+            }
+        );
         } catch (error) {
             throw new InternalServerErrorException('Error getting all reviews', error.message)
         }
@@ -65,6 +80,18 @@ export class ReviewService {
         return await this.prisma.review.findMany({
             where: {
                 published: REVIEW_STATUS.approved
+            },
+            include:{
+                user: {
+                    select:{
+                        name: true,
+                    }
+                },
+                court: {
+                    select: {
+                        name: true,
+                    }
+                }
             }
         }
         );
@@ -159,6 +186,18 @@ try {
             return await this.prisma.review.findMany({
                 where: {
                     court_id: court_id
+                },
+                include:{
+                    user: {
+                        select:{
+                            name: true,
+                        }
+                    },
+                    court: {
+                        select: {
+                            name: true,
+                        }
+                    }
                 }
             })
 
@@ -181,6 +220,18 @@ try {
             return this.prisma.review.findMany({
                 where: {
                     user_id: userId
+                },
+                include:{
+                    user: {
+                        select:{
+                            name: true,
+                        }
+                    },
+                    court: {
+                        select: {
+                            name: true,
+                        }
+                    }
                 }
             })
         } catch (error) {

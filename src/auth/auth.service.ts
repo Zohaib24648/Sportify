@@ -16,6 +16,7 @@ import { SignupDto } from './dto/signup.dto';
 import { SigninDto } from './dto/signin.dto';
 import { ResetPassDto } from './dto/resetpass.dto';
 import { ChangePasswordDto } from './dto/changepass.dto';
+import { EmailDto } from 'src/dtos-common/email.dto';
 
 @Injectable()
 export class AuthService {
@@ -244,9 +245,10 @@ throw new InternalServerErrorException('An unexpected error occurred', error.mes
   }
 
   // Forgot password
-  async forgotPassword(email: string): Promise<{ message: string }> {
+  async forgotPassword(email: EmailDto): Promise<{ message: string }> {
     try {
-      const user = await this.prisma.user.findUnique({ where: { email } });
+      const email_str = email.toString();
+      const user = await this.prisma.user.findUnique({ where: { email: email_str } });
       if (!user) throw new NotFoundException('User not found');
 
       const token = await this.generateToken(
@@ -258,7 +260,7 @@ throw new InternalServerErrorException('An unexpected error occurred', error.mes
       const resetLink = `${process.env.RESET_PASSWORD_URL}/${token}`;
       const emailContent = `Click the link to reset your password: ${resetLink}`;
 
-      await this.sendEmail(email, 'Password Reset Request', emailContent);
+      await this.sendEmail(email_str, 'Password Reset Request', emailContent);
 
       return { message: 'Password reset link has been sent to your email' };
     } catch (error) {

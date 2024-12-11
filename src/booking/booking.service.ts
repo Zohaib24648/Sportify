@@ -14,6 +14,7 @@ import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import { PaginationDto } from './dto/pagination.dto';
 import { MailService } from 'src/mail/mail.service';
+import { BookingIdDto } from 'src/dtos-common/bookingid.dto';
 
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
@@ -182,10 +183,11 @@ async getBookingDetails(id: string) {
     
       
 
-    async cancelBooking(id: string) {
+    async cancelBooking(id: BookingIdDto) {
+      const id_str = id.toString();
         try {
           const booking = await this.prisma.booking.findUnique({
-            where: { id },
+            where: { id: id_str },
             include: { slot: true },
           });
         
@@ -195,7 +197,7 @@ async getBookingDetails(id: string) {
         
           return this.prisma.$transaction(async (prisma) => {
             const updatedBooking = await prisma.booking.update({
-              where: { id },
+              where: { id:id_str },
               data: {
                 status: 'cancelled',
                 slot_id: null,
@@ -208,13 +210,13 @@ async getBookingDetails(id: string) {
               });
         
             const payments = await prisma.payment.findMany({
-              where: { booking_id: id },
+              where: { booking_id: id_str},
             });
         
             for (const payment of payments) {
-              const statusUpdate = payment.payment_status === 'paid'
-                ? 'refund_pending'
-                : 'refunded';
+              const statusUpdate = payment.payment_status === PAYMENT_STATUS.paid
+                ? PAYMENT_STATUS.refund_pending
+                : PAYMENT_STATUS.refunded;
         
               await prisma.payment.update({
                 where: { id: payment.id },

@@ -7,7 +7,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { Roles } from 'src/auth/guard/roles.decorator';
 import { UpdateReviewDto } from './dto/updatereview.dto';
 import { ChangeReviewStatusDto } from './dto/changereviewstatus.dto';
-import { CourtIdDto } from './dto/courtid.dto';
+import { CourtIdDto } from '../dtos-common/courtid.dto';
 import { ReviewIdDto } from './dto/reviewid.dto';
 
 @ApiTags('Reviews')

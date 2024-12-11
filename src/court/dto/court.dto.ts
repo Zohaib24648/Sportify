@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { PartialType } from '@nestjs/mapped-types';  
 import { COURT_TYPE } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
-import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 
 //auth/dto/court.dto.ts
 export class CourtDto {
@@ -20,6 +20,7 @@ export class CourtDto {
   example: COURT_TYPE,
   required: true,
 })
+
 @IsEnum(COURT_TYPE, { message: 'Invalid court type' })
 court_type: COURT_TYPE;
 
@@ -57,9 +58,9 @@ court_type: COURT_TYPE;
     example: 30,
     required: true,
   })
+  @Min(0)
+  @Max(100)
   @IsNumber()
   @IsNotEmpty()
   min_down_payment: number;
 }
-
-export class UpdateCourtDto extends PartialType(CourtDto) {}

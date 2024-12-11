@@ -1,12 +1,10 @@
 //auth/dto/auth.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, IsStrongPassword } from 'class-validator';
 export class AuthDto {
-  //swagger documentation
-
   @ApiProperty({
     description: "The user's email address",
-    example: 'user@gmail.com',
+    example: 'admin@gmail.com',
   })
   @IsEmail()
   @IsNotEmpty()
@@ -15,5 +13,6 @@ export class AuthDto {
   @ApiProperty({ description: "The user's password", example: 'password' })
   @IsNotEmpty()
   @IsString()
+  // @IsStrongPassword()
   password: string;
 }

@@ -22,6 +22,7 @@ import { ChangePasswordDto } from './dto/changepass.dto';
 import { Roles } from './guard/roles.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from './guard/roles.guard';
+import { EmailDto } from 'src/dtos-common/email.dto';
 
 
 @ApiTags('Authentication')
@@ -91,7 +92,7 @@ export class AuthController {
   })
   @ApiResponse({ status: 404, description: 'User not found.' })
   @Post('forgot-password')
-  async forgotPassword(@Body('email') email: string){
+  async forgotPassword(@Body('email') email: EmailDto){
     return await this.authService.forgotPassword(email);
   }
 

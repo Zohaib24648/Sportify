@@ -16,6 +16,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { PaginationDto } from './dto/pagination.dto';
+import { BookingIdDto } from 'src/dtos-common/bookingid.dto';
 
 @ApiBearerAuth()
 @Roles('admin')
@@ -65,7 +66,7 @@ export class BookingController {
   @ApiResponse({ status: 200, description: 'Booking canceled successfully.' })
   @ApiResponse({ status: 404, description: 'Booking not found.' })
   @Post('cancel_booking/:id')
-  async cancelBooking(@Param('id') id: string) {
+  async cancelBooking(@Param('id') id: BookingIdDto) {
     return this.bookingService.cancelBooking(id);
   }
 

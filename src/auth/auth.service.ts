@@ -7,7 +7,7 @@ import {
   UnauthorizedException,
   Logger,
 } from '@nestjs/common';
-import { Prisma, ROLE } from '@prisma/client';
+import { Prisma, ROLE, User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
@@ -124,12 +124,12 @@ export class AuthService {
   }
 
   // Private method to send verification email
-  private async sendVerificationEmail(user: any): Promise<void> {
+  private async sendVerificationEmail(user: User): Promise<void> {
     try {
       const token = await this.generateToken(
         user.id,
         user.email,
-        user.role,
+        user.roles,
         this.TOKEN_EXPIRY.VERIFICATION,
       );
       const verificationLink = `${process.env.VERIFY_USER_URL}/verify-user/${token}`;
@@ -171,7 +171,7 @@ export class AuthService {
 
       return { message: 'User verified successfully' };
     } catch (error) {
-      this.logger.error('User verification failed', error.stack);
+      this.logger.error('User verification failed', error.message);
       throw error;
     }
   }
@@ -182,7 +182,7 @@ export class AuthService {
 
     try {
       const user = await this.prisma.user.findUnique({ where: { email } });
-      if (!user || !user.password_hash) {
+      if (!user) {
         throw new UnauthorizedException('Invalid email or password');
       }
 
@@ -208,7 +208,7 @@ export class AuthService {
       return { access_token: token };
     } catch (error) {
       this.logger.error('Signin failed', error.stack);
-      throw error;
+throw new InternalServerErrorException('An unexpected error occurred', error.message);
     }
   }
 

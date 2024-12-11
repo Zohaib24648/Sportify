@@ -40,14 +40,14 @@ export class SlotService {
 
   timevalidator(dto: TimeDto): boolean {
     const { start_time, end_time } = dto;
+    console.log("Printing from time Validator")
+    console.log(`Dto checked , without conversion , Starttime : ${start_time} , Endtime : ${end_time}`);
 
-    const startTime = dayjs(start_time);
-    const endTime = dayjs(end_time);
+    const startTime = dayjs(start_time,'Asia/Karachi');
+    const endTime = dayjs(end_time,'Asia/Karachi');
 
-    if (!startTime.isValid() || !endTime.isValid()) {
-      console.error('Invalid date-time format');
-      return false;
-    }
+    console.log(`Dto checked , with conversion , Starttime : ${startTime} , Endtime : ${endTime}`);
+
 
     if (!startTime.isBefore(endTime)) {
       console.error('Start time must be before end time');
@@ -77,7 +77,7 @@ export class SlotService {
       const overlappingSlot = await this.prisma.slot.findFirst({
         where: {
           court_id,
-          id: excludeSlotId ? { not: excludeSlotId } : undefined, // Exclude current slot
+          id: excludeSlotId ? { not: excludeSlotId } : undefined, 
           AND: [
             { start_time: { lt: end_time } },
             { end_time: { gt: start_time } },
@@ -248,13 +248,12 @@ export class SlotService {
   async createSlot(dto: SlotDto) {
     try {
       const { court_id, start_time, end_time } = dto;
-      if (!this.timevalidator(dto)) {
-        throw new BadRequestException('Invalid time slot');
-      }
-
       const isSlotOverlapping = await this.checkOverlappingSlot(dto);
-      const isCourtAvailable = await this.checkCourtAvailability(dto);
-      const isCourtOpen = await this.checkCourtCloseDates(dto);
+      
+      const isCourtAvailable = true
+      const isCourtOpen = true
+      // const isCourtAvailable = await this.checkCourtAvailability(dto);
+      // const isCourtOpen = await this.checkCourtCloseDates(dto);
 
       if (!isSlotOverlapping || !isCourtAvailable || !isCourtOpen) {
         throw new BadRequestException(

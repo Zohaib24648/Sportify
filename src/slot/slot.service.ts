@@ -331,8 +331,8 @@ export class SlotService {
 
   async getAvailableSlotsForDay(dto: GetAvailableSlotsDto) {
     const { court_id, date } = dto;
-    console.log('court_id', court_id, 'date', date);  
-
+    console.log('court_id', court_id, 'date', date);
+  
     const court = await this.courtService.get_court_details(court_id);
     if (!court) {
       throw new NotFoundException(`Court with ID ${court_id} not found`);
@@ -369,16 +369,18 @@ export class SlotService {
       }
     }
   
-    // Convert increments back to the HH:mm:ss format
-    const availableSlots: Record<string, boolean> = {};
+    // Convert increments back to the desired format
+    const availableSlots = [];
     for (let i = 0; i < 48; i++) {
       const timeKey = targetDate.clone().add(i * 30, 'minute').format('HH:mm:ss');
-      availableSlots[timeKey] = increments[i];
+      availableSlots.push({
+        value: timeKey,
+        available: increments[i],
+      });
     }
   
     return availableSlots;
   }
-
 
 
 

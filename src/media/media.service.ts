@@ -11,7 +11,8 @@ getmedia(): string {
 
 uploadmedia(): string {
     return 'media';
-  }
+  ``
+}
 
 delelemedia(): string {
     return 'media';

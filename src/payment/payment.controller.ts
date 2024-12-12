@@ -17,6 +17,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import { PAYMENT_STATUS } from '@prisma/client';
 
 @ApiTags('Payments')
 @Controller('payment')
@@ -58,8 +59,8 @@ export class PaymentController {
   @ApiBearerAuth()
   //Get Payment By Payment Status
   @Get('get_payment_by_status/:status')
-  async getPaymentByStatus(@Param('status') status: string) {
-    return this.paymentService.getPaymetByStatus(status);
+  async getPaymentByStatus(@Param('status') status: PAYMENT_STATUS) {
+    return this.paymentService.getPaymentByStatus(status);
   }
 
   //Get Payment By Id

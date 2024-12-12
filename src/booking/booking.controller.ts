@@ -1,5 +1,5 @@
 // booking.controller.ts
-import { Controller, Query, UseGuards } from '@nestjs/common';
+import { Controller, Query, Req, UseGuards } from '@nestjs/common';
 import { Delete, Get, Post, Put, Body, Param } from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -16,6 +16,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { PaginationDto } from './dto/pagination.dto';
+import { SlotDto } from 'src/slot/dto/slot.dto';
 
 @ApiBearerAuth()
 @Roles('admin')
@@ -35,8 +36,9 @@ export class BookingController {
     description: 'Invalid time slot or other errors.',
   })
   @Post('create_booking')
-  async createBooking(@Body() dto: CreateBookingDto) {
-    return this.bookingService.createBooking(dto);
+  async createBooking(@Req() req : any ,  @Body() dto: SlotDto) {
+    const dto1 = req.user;
+    return this.bookingService.createBooking(dto,dto1);
   }
 
   @ApiOperation({ summary: 'Get all bookings (Admin only)' })

@@ -40,10 +40,10 @@ export class PaymentService {
       return false;
     }
 
-    if (payment_amount > remainingAmount) {
-      console.error(`Payment exceeds the remaining amount: ${remainingAmount}`);
-      return false;
-    }
+    // if (payment_amount > remainingAmount) {
+    //   console.error(`Payment exceeds the remaining amount: ${remainingAmount}`);
+    //   return false;
+    // }
     return true;
   }
 
@@ -157,18 +157,15 @@ export class PaymentService {
     }
   }
 
-  getpendingPayments() {
-    const payments = this.prisma.payment.findMany({
-      where: { payment_status: 'verification_pending' },
-    });
-    return payments;
-  }
-
-  getPaymetByStatus(status: string) {
-    const payments = this.prisma.payment.findMany({
-      where: { payment_status: status as PAYMENT_STATUS },
-    });
-    return payments;
+  getPaymentByStatus(status: PAYMENT_STATUS) {
+    try {
+      const payments = this.prisma.payment.findMany({
+        where: { payment_status: status as PAYMENT_STATUS },
+      });
+      return payments;
+    } catch (error) {
+      
+    }
   }
 
   getPaymentById(id: string) {

@@ -48,7 +48,7 @@ export class BookingService {
     async createBooking(dto : SlotDto, dto1 : any) {
       const { userId } = dto1;
       const user_id = userId;
-      if (!this.slotService.timevalidator(dto)) {
+            if (!this.slotService.timevalidator(dto)) {
         throw new BadRequestException('Invalid time slot');
       }
     try {
@@ -56,6 +56,7 @@ export class BookingService {
         const slotdto : SlotDto = {court_id, start_time, end_time};
       
        return this.prisma.$transaction(async (prisma) => {
+        
         const slot = await this.slotService.createSlot(slotdto);
         const totalAmount = await this.calculateTotalAmount(slotdto);
       

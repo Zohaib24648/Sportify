@@ -1,12 +1,12 @@
+import { IsNotEmpty, IsString } from "class-validator";
+
 export class UpdateUserDto {
     
-    name: string;
 
-
-    user_pfp_link : string;
-    
+    @IsString()
+    @IsNotEmpty()
+    name: string;    
     // email: string;
-    
     // user_phone: string;
 
 }

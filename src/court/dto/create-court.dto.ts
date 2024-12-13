@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, ValidateNested, IsString } from 'class-validator';
+import { IsArray, ValidateNested, IsString, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CourtDto } from './court.dto';
 import { CourtAvailabilityDto } from './courtavailability.dto';
@@ -9,29 +9,21 @@ export class CreateCourtDto extends CourtDto {
   @ApiProperty({
     description: 'Availability of the court',
     type: [CourtAvailabilityDto],
-    required: true,
+    // required: true,
   })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CourtAvailabilityDto)
+  @IsOptional()
   availability: CourtAvailabilityDto[];
 
   @ApiProperty({
-    description: 'Media of the court',
-    type: [CourtMediaDto],
-    required: true,
-  })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CourtMediaDto)
-  media: CourtMediaDto[];
-
-  @ApiProperty({
     description: 'IDs of the games for the court',
-    required: true,
+    // required: true,
     type: [String],
   })
   @IsArray()
+  @IsOptional()
   @IsString({ each: true })
   games: string[];
 }

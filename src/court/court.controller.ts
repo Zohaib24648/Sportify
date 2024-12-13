@@ -8,7 +8,9 @@ import {
   Post,
   Put,
   Query,
+  UploadedFiles,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { CourtService } from './court.service';
 import { CourtDto } from 'src/court/dto/court.dto';
@@ -30,6 +32,7 @@ import { updateCourtAvailabilityDto } from './dto/updatecourtavailability.dto';
 import { UpdateCourtMediaDto } from './dto/update_court_media.dto';
 import { PaginationDto } from 'src/booking/dto/pagination.dto';
 import { CreateCourtDto } from './dto/create-court.dto';
+import { FilesInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Courts')
 @Controller('court')
@@ -45,12 +48,14 @@ export class CourtController {
     status: 409,
     description: 'Court with this name already exists',
   })
+  @UseInterceptors(FilesInterceptor('files'))
   @ApiBearerAuth()
   @Roles('admin')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Post('create_court')
-  createCourt(@Body() dto: CreateCourtDto) {
-    return this.court_service.createCourt(dto);
+  createCourt(@Body() dto: CreateCourtDto, @UploadedFiles() files: Express.Multer.File[]) {
+    console.log(dto);
+    return this.court_service.createCourt(dto, files);
   }
 
   @ApiOperation({ summary: 'Retrieve a list of courts excluding deleted' })

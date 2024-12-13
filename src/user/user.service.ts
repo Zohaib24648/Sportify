@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserSearchDto } from './dto/usersearch.dto';
 import { User } from '@prisma/client';
@@ -27,88 +27,77 @@ export class UserService {
 
   async getMe(dto: any) {
     const { userId } = dto;
-    try {
-      const user = await this.prisma.user.findUnique({ where: { id: userId } });
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-      return user;
-    } catch (error) {
-      throw new NotFoundException('User not found', error.message);
+    const user = await this.prisma.user.findUnique({ where: { id: userId }
     }
+  );
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    delete user.password_hash;
+    if(user.user_pfp_link){
+      user.user_pfp_link = await this.uploadService.getFileUrl(user.user_pfp_link);}
+    return user;
   }
 
+  async updateUser(dto: any, dto1: UpdateUserDto, dto2: Express.Multer.File) {
+ try {
+  const { userId } = dto;
+  const { name } = dto1;
 
-  async updateUser (dto: UpdateUserDto, dto1:any) {
-  
-  const { userId} = dto1;
-  const { user_pfp_link } = dto;
-
-  const user = await this.prisma.user.findUnique({
-    where: { id: userId },
-  });
+  const user = await this.prisma.user.findUnique({ where: { id: userId } });
   if (!user) {
     throw new NotFoundException('User not found');
   }
 
-  if (user.user_pfp_link){
-    this.handleProfilePic(user,user_pfp_link);
+  const data: any = { name };
+
+  if (dto2) {
+    const uploadResult = await this.handleProfilePic(dto2);
+    data.user_pfp_link = uploadResult.filename;
   }
 
+  const updated_user =  await this.prisma.user.update({
+    where: { id: userId },
+    data,
+  });
 
-  try {
-    const user = await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        ...dto,
-      },
+  delete updated_user.password_hash;
+  if(updated_user.user_pfp_link){
+    updated_user.user_pfp_link = await this.uploadService.getFileUrl(updated_user.user_pfp_link);}
+  return updated_user;
+ } catch (error) {
+  throw new InternalServerErrorException('Failed to update user', error.message);
+ }
+    }
 
-    });
-    return user;
-  } catch (error) {
-    throw new NotFoundException('User not found', error.message);}
-  
-  }
+
+
 
   async getBookingHistory(dto: any) {
     const { userId } = dto;
-    try {
-      const bookingHistory = await this.prisma.booking.findMany({
-        where: { user_id: userId },
-      });
-      return bookingHistory;
-    } catch (error) {
-      throw new NotFoundException('Booking history not found', error.message);
-    }
+    return await this.prisma.booking.findMany({
+      where: { user_id: userId },
+    });
   }
 
-  async handleProfilePic(user: User , user_pfp_link: string) {
-    // if (user.user_pfp_link) {
-    //   try {
-    //     await this.uploadService.deleteFile(user.user_pfp_link);
+  async handleProfilePic( user_pfp_link: Express.Multer.File) {
 
-    //     await this.uploadService.uploadFile(user_pfp_link);
-    //   } catch (error) {
-    //     throw new NotFoundException('Error Handling Picture', error.message);
-    //   }
-    // }
-  
+    try {
+      const upload_file = await this.uploadService.uploadFile(user_pfp_link);
+      const filename = upload_file.filename;
+      return {filename};
+    } catch (error) {
+      throw new NotFoundException('Failed to upload file', error.message);
+    }
   }
 
   async getPaymentHistory(dto: any) {
     const { userId } = dto;
-    try {
-      const paymentHistory = await this.prisma.booking.findMany({
-        where: { user_id: userId },
-        include: {
-          payment: true,
-        },
-      });
-
-      const payments = paymentHistory.flatMap((booking) => booking.payment);
-      return payments;
-    } catch (error) {
-      throw new NotFoundException('Payment history not found', error.message);
-    }
+    const paymentHistory = await this.prisma.booking.findMany({
+      where: { user_id: userId },
+      include: { payment: true },
+    });
+  
+    return paymentHistory.flatMap((booking) => booking.payment);
   }
 }

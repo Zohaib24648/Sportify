@@ -7,20 +7,34 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { DAY, Prisma } from '@prisma/client';
+import { DAY, MEDIA_TYPE, Prisma } from '@prisma/client';
 import { CourtDto, UpdateCourtDto } from 'src/court/dto/court.dto';
-import { CourtSpecDto } from 'src/court/dto/court_spec.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CourtAvailabilityDto } from './dto/courtavailability.dto';
 import { CourtMediaDto } from './dto/court_media.dto';
 import { updateCourtAvailabilityDto } from './dto/updatecourtavailability.dto';
-import { UpdateCourtMediaDto } from './dto/update_court_media.dto';
-import { PaginationDto } from 'src/booking/dto/pagination.dto';
 import { CreateCourtDto } from './dto/create-court.dto';
+import { UploadService } from 'src/upload/upload.service';
 
 @Injectable()
 export class CourtService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private uploadService: UploadService) {}
+
+
+   mapMimeTypeToMediaType(mimetype: string): MEDIA_TYPE {
+    switch (mimetype) {
+      case 'image/jpeg':
+      case 'image/png':
+      case 'image/gif':
+        return MEDIA_TYPE.image;
+      case 'video/mp4':
+      case 'video/mpeg':
+        return MEDIA_TYPE.video;
+      default:
+        throw new BadRequestException(`Unsupported media type: ${mimetype}`);
+    }
+  }
+
 
   // Centralized validation method
   private async validateCourtData(dto: CourtDto): Promise<void> {
@@ -31,34 +45,50 @@ export class CourtService {
     }
   }
   
-  async createCourt(createCourtDto: CreateCourtDto) {
-    const { availability, media, games, ...courtData } = createCourtDto;
-    this.validateCourtData(courtData);
+  
+  async createCourt(createCourtDto: CreateCourtDto, files: Express.Multer.File[]) {
+    createCourtDto.hourly_rate = Number(createCourtDto.hourly_rate);
+    createCourtDto.min_down_payment = Number(createCourtDto.min_down_payment);
+  
 
+    console.log(createCourtDto);
+    const { availability, games, ...courtData } = createCourtDto;
+    this.validateCourtData(courtData);
+  
+    const uploadedFiles = await this.uploadService.uploadFiles(files);
+  
+    const media_link = uploadedFiles.map((file) => file.filename);
+    console.log(media_link);
+  
+    console.log(uploadedFiles);
+    const media = uploadedFiles.map((file, index) => ({
+      media_type: this.mapMimeTypeToMediaType(files[index].mimetype),
+      media_link: file.filename,
+    }));
+  
+    console.log(media);
+  
     try {
       const court = await this.prisma.court.create({
         data: {
           ...courtData,
-          court_availability: {
-            create: availability.map((item) => ({
-              day: item.day,
-              start_time: item.start_time,
-              end_time: item.end_time,
-            })),
-          },
+          // court_availability: {
+          //   create: availability.map((item) => ({
+          //     day: item.day,
+          //     start_time: item.start_time,
+          //     end_time: item.end_time,
+          //   })),
+          // },
           court_media: {
-            create: media.map((item) => ({
-              media_type: item.media_type,
-              media_link: item.media_link,
-            })),
+            create: media,
           },
-          game_links: {
-            create: games.map((gameId) => ({
-              game: {
-                connect: { id: gameId },
-              },
-            })),
-          },
+          // game_links: {
+          //   create: games.map((gameId) => ({
+          //     game: {
+          //       connect: { id: gameId },
+          //     },
+          //   })),
+          // },
         },
         include: {
           court_availability: true,
@@ -66,13 +96,12 @@ export class CourtService {
           game_links: true,
         },
       });
-
+  
       return court;
     } catch (error) {
       throw new InternalServerErrorException('Failed to create court', error.message);
     }
   }
-
   async get_all_Courts() {
     try {
       return this.prisma.court.findMany({

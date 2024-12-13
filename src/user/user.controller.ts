@@ -1,5 +1,5 @@
 //user/user.controller.ts
-import { Body, Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, Query, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UserSearchDto } from './dto/usersearch.dto';
 import { UserService } from './user.service';
@@ -7,6 +7,7 @@ import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { User } from '@prisma/client';
 import { UpdateUserDto } from './dto/updateuser.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('users')
 export class UserController {
@@ -30,11 +31,12 @@ export class UserController {
 
     
   @ApiBearerAuth()
-  @Post('update_user')
+  @Put('update_user')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  async updateUser(@Req() req , @Body() dto : UpdateUserDto) {
-    const dto1 = req.user;
-    return this.userService.updateUser(dto,dto1);
+@UseInterceptors(FileInterceptor('user_pfp_link'))
+  async updateUser(@Req() req , @Body() dto1 : UpdateUserDto , @UploadedFile() dto2: Express.Multer.File ) {
+    const dto = req.user;
+    return this.userService.updateUser(dto,dto1,dto2);
   }
 
   

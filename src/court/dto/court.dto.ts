@@ -3,6 +3,7 @@ import { PartialType } from '@nestjs/mapped-types';
 import { COURT_TYPE } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
 
 //auth/dto/court.dto.ts
 export class CourtDto {
@@ -49,16 +50,17 @@ court_type: COURT_TYPE;
   })
   @IsNumber()
   @IsNotEmpty()
+  @Type(() => Number)
   hourly_rate: number;
 
   @ApiProperty({
-    description:
-      'The minimum percentage down payment required to book the court',
+    description: 'The minimum percentage down payment required to book the court',
     example: 30,
     required: true,
   })
   @IsNumber()
   @IsNotEmpty()
+  @Type(() => Number)
   min_down_payment: number;
 }
 

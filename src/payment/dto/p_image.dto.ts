@@ -9,13 +9,4 @@ export class PImageDto {
   @IsString()
   @IsNotEmpty()
   payment_id: string;
-
-  @ApiProperty({
-    description: 'The URL of the payment receipt image',
-    example: 'http://example.com/receipt.jpg',
-  })
-  @IsString()
-  @IsNotEmpty()
-  // @IsUrl()
-  image: string;
 }

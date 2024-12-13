@@ -213,7 +213,6 @@ export class CourtService {
     // this.validateCourtData(dto);
 
     try {
-
       const court = this.get_court_details(id);
       if (!court) {
         throw new NotFoundException(`Court with ID ${id} not found`);
@@ -248,11 +247,11 @@ export class CourtService {
         where: { id },
         data : { is_deleted: true }
       });
-      //delete availabilities , games , and other related tables  
-      await this.prisma.court_Availability.deleteMany({ where: { court_id: id } });
-      await this.prisma.courtGameLink.deleteMany({ where: { court_id: id } });
-      await this.prisma.court_Media.deleteMany({ where: { court_id: id } });
-      await this.prisma.court_Specs.deleteMany({ where: { court_id: id } });
+      // //delete availabilities , games , and other related tables  
+      // await this.prisma.court_Availability.deleteMany({ where: { court_id: id } });
+      // await this.prisma.courtGameLink.deleteMany({ where: { court_id: id } });
+      // await this.prisma.court_Media.deleteMany({ where: { court_id: id } });
+      // await this.prisma.court_Specs.deleteMany({ where: { court_id: id } });
 
       return 'Court deleted successfully';
     } catch (error) {

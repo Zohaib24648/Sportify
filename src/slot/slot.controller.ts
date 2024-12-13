@@ -2,10 +2,10 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { Roles } from 'src/auth/guard/roles.decorator';
 import { SlotService } from './slot.service';
-import { SlotCourtDto } from './dto/slotcourt.dto';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SlotDto } from './dto/slot.dto';
 import { TimeDto } from './dto/time.dto';
+import { GetAvailableSlotsDto } from './dto/getavailableslots.dto';
 
 @ApiTags('slot')
 @Controller('slot')
@@ -28,7 +28,7 @@ export class SlotController {
   @ApiBearerAuth()
   @Roles('admin')
   @Post('get_available_slots')
-  getAvailableSlotsForDay(@Body() dto: any) {
+  getAvailableSlotsForDay(@Body() dto: GetAvailableSlotsDto) {
     return this.slotService.getAvailableSlotsForDay(dto);
   }
 

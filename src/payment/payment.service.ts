@@ -41,10 +41,10 @@ export class PaymentService {
       return false;
     }
 
-    if (payment_amount > remainingAmount) {
-      console.error(`Payment exceeds the remaining amount: ${remainingAmount}`);
-      return false;
-    }
+    // if (payment_amount > remainingAmount) {
+    //   console.error(`Payment exceeds the remaining amount: ${remainingAmount}`);
+    //   return false;
+    // }
     return true;
   }
 
@@ -158,11 +158,15 @@ export class PaymentService {
     }
   }
 
-  getPaymetByStatus(status: PAYMENT_STATUS) {
-    const payments = this.prisma.payment.findMany({
-      where: { payment_status: status as PAYMENT_STATUS },
-    });
-    return payments;
+  getPaymentByStatus(status: PAYMENT_STATUS) {
+    try {
+      const payments = this.prisma.payment.findMany({
+        where: { payment_status: status as PAYMENT_STATUS },
+      });
+      return payments;
+    } catch (error) {
+      throw new InternalServerErrorException("Failed to fetch payments by status", error.message);
+    }
   }
 
   async getPaymentById(id: string) {

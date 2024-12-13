@@ -16,7 +16,7 @@ export const mailerConfig: MailerOptions = {
   },
   template: {
     dir: path.join(__dirname, 'templates'),
-    adapter: new HandlebarsAdapter(), // Specify the adapter if using templates
+    adapter: new HandlebarsAdapter(), 
     options: {
       strict: true,
     },

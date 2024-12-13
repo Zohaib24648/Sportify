@@ -16,6 +16,8 @@ import { UploadModule } from './upload/upload.module';
 import { MediaService } from './media/media.service';
 import { MediaController } from './media/media.controller';
 import { MediaModule } from './media/media.module';
+import { ReviewController } from './review/review.controller';
+import { ReviewModule } from './review/review.module';
 
 @Module({
   imports: [
@@ -33,10 +35,11 @@ import { MediaModule } from './media/media.module';
     GameModule,
     AdminModule,
     MailModule,
+    ReviewModule,
     UploadModule,
     MediaModule,
   ],
-  controllers: [UploadController, MediaController],
+  controllers: [UploadController, MediaController,ReviewController],
   providers: [MediaService],
 })
 export class AppModule {}

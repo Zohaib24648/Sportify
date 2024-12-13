@@ -18,8 +18,6 @@ import { MailService } from 'src/mail/mail.service';
 dayjs.extend(customParseFormat);
 dayjs.extend(utc);
 dayjs.extend(timezone);
-
-// Set default time zone to Pakistan Standard Time
 dayjs.tz.setDefault('Asia/Karachi');
 
 
@@ -47,15 +45,18 @@ export class BookingService {
     
     
 
-    async createBooking(dto : CreateBookingDto) {
-      if (!this.slotService.timevalidator(dto)) {
+    async createBooking(dto : SlotDto, dto1 : any) {
+      const { userId } = dto1;
+      const user_id = userId;
+            if (!this.slotService.timevalidator(dto)) {
         throw new BadRequestException('Invalid time slot');
       }
     try {
-      const { user_id, court_id, start_time, end_time } = dto;
+      const {court_id, start_time, end_time } = dto;
         const slotdto : SlotDto = {court_id, start_time, end_time};
       
        return this.prisma.$transaction(async (prisma) => {
+        
         const slot = await this.slotService.createSlot(slotdto);
         const totalAmount = await this.calculateTotalAmount(slotdto);
       
@@ -96,7 +97,7 @@ export class BookingService {
         const court_id = booking.slot.court_id;
     
         // Optionally, validate booking status before updating
-        if (booking.status !== BOOKING_STATUS.pending && booking.status !== BOOKING_STATUS.confirmed) {
+        if (booking.status === BOOKING_STATUS.completed) {
           throw new BadRequestException('Cannot update booking in its current status');
         }
     
@@ -192,6 +193,10 @@ async getBookingDetails(id: string) {
           if (!booking) {
             throw new NotFoundException('Booking not found');
           }
+
+          if (booking.status === 'cancelled') {
+            throw new BadRequestException('Booking already cancelled');
+          }
         
           return this.prisma.$transaction(async (prisma) => {
             const updatedBooking = await prisma.booking.update({
@@ -212,9 +217,9 @@ async getBookingDetails(id: string) {
             });
         
             for (const payment of payments) {
-              const statusUpdate = payment.payment_status === 'paid'
-                ? 'refund_pending'
-                : 'refunded';
+              const statusUpdate = payment.payment_status === PAYMENT_STATUS.paid
+                ? PAYMENT_STATUS.refund_pending
+                : PAYMENT_STATUS.refunded;
         
               await prisma.payment.update({
                 where: { id: payment.id },

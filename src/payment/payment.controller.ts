@@ -68,7 +68,7 @@ export class PaymentController {
   //Get Payment By Payment Status
   @Get('get_payment_by_status/:status')
   async getPaymentByStatus(@Param('status') status: PAYMENT_STATUS) {
-    return this.paymentService.getPaymetByStatus(status);
+    return this.paymentService.getPaymentByStatus(status);
   }
 
   //Get Payment By Id

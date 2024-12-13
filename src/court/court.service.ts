@@ -8,14 +8,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { DAY, Prisma } from '@prisma/client';
-import { CourtDto, UpdateCourtDto } from 'src/court/dto/court.dto';
-import { CourtSpecDto } from 'src/court/dto/court_spec.dto';
+import { CourtDto } from 'src/court/dto/court.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CourtAvailabilityDto } from './dto/courtavailability.dto';
 import { CourtMediaDto } from './dto/court_media.dto';
 import { updateCourtAvailabilityDto } from './dto/updatecourtavailability.dto';
-import { UpdateCourtMediaDto } from './dto/update_court_media.dto';
-import { PaginationDto } from 'src/booking/dto/pagination.dto';
 import { CreateCourtDto } from './dto/create-court.dto';
 
 @Injectable()

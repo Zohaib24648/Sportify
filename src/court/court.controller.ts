@@ -262,14 +262,14 @@ export class CourtController {
   //   return this.court_service.update_court_spec(id, dto);
   // }
 
-  @ApiOperation({ summary: 'Add media to a court' })
-  @ApiBearerAuth()
-  @Roles('admin')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Post('add_court_media/:id')
-  add_court_media(@Param('id') id: string , @Body() dto: CourtMediaDto) {
-    return this.court_service.addCourtMedia(id,dto);
-  }
+  // @ApiOperation({ summary: 'Add media to a court' })
+  // @ApiBearerAuth()
+  // @Roles('admin')
+  // @UseGuards(AuthGuard('jwt'), RolesGuard)
+  // @Post('add_court_media/:id')
+  // add_court_media(@Param('id') id: string , @Body() dto: CourtMediaDto) {
+  //   return this.court_service.addCourtMedia(id,dto);
+  // }
 
   @ApiOperation({ summary: 'deletes media from a court' })
   @ApiBearerAuth()

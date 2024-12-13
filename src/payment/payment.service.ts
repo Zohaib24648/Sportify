@@ -13,13 +13,14 @@ import { PaymentDto } from './dto/payment.dto';
 import { PImageDto } from './dto/p_image.dto';
 import { BookingService } from 'src/booking/booking.service';
 import { PaymentHandlerDto } from './dto/paymenthandler.dto';
+import { UploadService } from 'src/upload/upload.service';
 
 @Injectable()
 export class PaymentService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly courtService: CourtService,
     private readonly bookingService: BookingService,
+    private readonly uploadService: UploadService,
   ) {}
 
   async paymentHandler(dto: PaymentHandlerDto): Promise<boolean> {
@@ -40,10 +41,10 @@ export class PaymentService {
       return false;
     }
 
-    if (payment_amount > remainingAmount) {
-      console.error(`Payment exceeds the remaining amount: ${remainingAmount}`);
-      return false;
-    }
+    // if (payment_amount > remainingAmount) {
+    //   console.error(`Payment exceeds the remaining amount: ${remainingAmount}`);
+    //   return false;
+    // }
     return true;
   }
 
@@ -157,23 +158,34 @@ export class PaymentService {
     }
   }
 
-  getpendingPayments() {
-    const payments = this.prisma.payment.findMany({
-      where: { payment_status: 'verification_pending' },
-    });
-    return payments;
-  }
-
-  getPaymetByStatus(status: string) {
-    const payments = this.prisma.payment.findMany({
-      where: { payment_status: status as PAYMENT_STATUS },
-    });
-    return payments;
-  }
-
-  getPaymentById(id: string) {
+  getPaymentByStatus(status: PAYMENT_STATUS) {
     try {
-      return this.prisma.payment.findFirst({ where: { id } });
+      const payments = this.prisma.payment.findMany({
+        where: { payment_status: status as PAYMENT_STATUS },
+      });
+      return payments;
+    } catch (error) {
+      throw new InternalServerErrorException("Failed to fetch payments by status", error.message);
+    }
+  }
+
+  async getPaymentById(id: string) {
+    try {
+      const payment= await this.prisma.payment.findFirst(
+        { 
+        where: { id },
+        include: { booking: {
+          include: { user: true }
+        } } 
+      },);
+
+      if (!payment) {
+        throw new NotFoundException('Payment not found');
+        }
+        if (payment.payment_image_link) {
+          payment.payment_image_link = await this.uploadService.getFileUrl(payment.payment_image_link);
+        }
+        return payment;
     } catch (error) {
       throw new InternalServerErrorException(
         'Failed to fetch payment by id',
@@ -182,21 +194,32 @@ export class PaymentService {
     }
   }
 
-  async uploadPaymentImage(dto: PImageDto) {
-    const { payment_id, image } = dto;
+  async uploadPaymentImage(token : any , image: Express.Multer.File , paymentId: PImageDto) {
+
     try {
-      // Update the payment record
-      return await this.prisma.payment.update({
-        where: { id: payment_id }, // Match the primary key
-        data: {
-          payment_image_link: image,
-          payment_status: 'verification_pending', // Update the status
-        },
+      const { payment_id } = paymentId;
+      const { userId } = token;
+      const payment = await this.getPaymentById(payment_id);
+      if (!payment) {
+        throw new NotFoundException(`Payment with ID ${payment_id} not found`);
+      }
+      if (payment.booking.user_id !== userId) {
+        throw new BadRequestException('You are not authorized to upload payment image for this booking');
+      }
+      const upload_result =  await this.uploadService.uploadFile(image);
+      const {filename} = upload_result;
+
+      const updatedPayment = await this.prisma.payment.update({
+        where: { id: payment_id },
+        data: { payment_image_link: filename,
+          payment_status: 'verification_pending'
+         },
       });
+
+      return updatedPayment;
     } catch (error) {
-      throw new InternalServerErrorException(
-        'Failed to upload payment image',
-        error.message,
+      throw new Error(
+      error
       );
     }
   }

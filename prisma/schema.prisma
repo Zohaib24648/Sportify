@@ -80,7 +80,7 @@ model User {
   email_verified       Boolean   @default(false)
   phone_verified       Boolean   @default(false)
   password_hash        String
-  user_pfp_link        String    @default("https://www.shutterstock.com/default-avatar.png")
+  user_pfp_link        String?    
   user_phone           String    @unique
   secondary_user_phone String?
   roles                ROLE[]    @default([user])
@@ -203,7 +203,7 @@ model Payment {
   payment_amount     Int
   payment_method     PAYMENT_METHOD @default(ONLINE)
   payment_time       DateTime       @default(now())
-  payment_image_link String
+  payment_image_link String?
   booking            Booking        @relation(fields: [booking_id], references: [id])
 }
 

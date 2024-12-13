@@ -11,6 +11,11 @@ import { SlotModule } from './slot/slot.module';
 import { GameModule } from './game/game.module';
 import { AdminModule } from './admin/admin.module';
 import { MailModule } from './mail/mail.module';
+import { UploadController } from './upload/upload.controller';
+import { UploadModule } from './upload/upload.module';
+import { MediaService } from './media/media.service';
+import { MediaController } from './media/media.controller';
+import { MediaModule } from './media/media.module';
 import { ReviewController } from './review/review.controller';
 import { ReviewModule } from './review/review.module';
 
@@ -31,7 +36,10 @@ import { ReviewModule } from './review/review.module';
     AdminModule,
     MailModule,
     ReviewModule,
+    UploadModule,
+    MediaModule,
   ],
-  controllers: [ReviewController],
+  controllers: [UploadController, MediaController,ReviewController],
+  providers: [MediaService],
 })
 export class AppModule {}

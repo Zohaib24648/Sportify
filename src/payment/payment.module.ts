@@ -6,6 +6,7 @@ import { CourtService } from 'src/court/court.service';
 import { SlotService } from 'src/slot/slot.service';
 import { BookingService } from 'src/booking/booking.service';
 import { MailService } from 'src/mail/mail.service';
+import { UploadService } from 'src/upload/upload.service';
 
 @Module({
   controllers: [PaymentController],
@@ -15,6 +16,7 @@ import { MailService } from 'src/mail/mail.service';
     SlotService,
     BookingService,
     MailService,
+    UploadService
   ],
 })
 export class PaymentModule {}

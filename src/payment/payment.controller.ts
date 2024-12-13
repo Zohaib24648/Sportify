@@ -7,6 +7,10 @@ import {
   Param,
   Post,
   Put,
+  Req,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { PaymentDto } from './dto/payment.dto';
@@ -17,6 +21,11 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from 'src/auth/guard/roles.guard';
+import { Roles } from 'src/auth/guard/roles.decorator';
+import { PAYMENT_STATUS } from '@prisma/client';
 
 @ApiTags('Payments')
 @Controller('payment')
@@ -58,8 +67,8 @@ export class PaymentController {
   @ApiBearerAuth()
   //Get Payment By Payment Status
   @Get('get_payment_by_status/:status')
-  async getPaymentByStatus(@Param('status') status: string) {
-    return this.paymentService.getPaymetByStatus(status);
+  async getPaymentByStatus(@Param('status') status: PAYMENT_STATUS) {
+    return this.paymentService.getPaymentByStatus(status);
   }
 
   //Get Payment By Id
@@ -90,10 +99,14 @@ export class PaymentController {
   })
   @ApiResponse({ status: 400, description: 'Invalid booking ID or image' })
   @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('user')
   @Post('upload_payment_receipt')
-  async uploadPaymentReceipt(@Body() dto: PImageDto) {
-    console.log(dto);
-    return this.paymentService.uploadPaymentImage(dto);
+  @UseInterceptors(FileInterceptor('payment_image'))
+  async uploadPaymentReceipt(@Req() req:any, @Body() paymentId :PImageDto , @UploadedFile() image: Express.Multer.File) {
+    const token = req.user;
+    console.log(token);
+    return this.paymentService.uploadPaymentImage(token,image,paymentId,);
   }
 
   @ApiOperation({ summary: 'Verify a payment by ID' })

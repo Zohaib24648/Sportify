@@ -7,6 +7,7 @@ import { Module } from '@nestjs/common';
 import { SlotService } from 'src/slot/slot.service';
 import { PaymentService } from 'src/payment/payment.service';
 import { MailService } from 'src/mail/mail.service';
+import { UploadService } from 'src/upload/upload.service';
 
 @Module({
   providers: [
@@ -16,6 +17,7 @@ import { MailService } from 'src/mail/mail.service';
     SlotService,
     PaymentService,
     MailService,
+    UploadService
   ],
   controllers: [BookingController],
 })

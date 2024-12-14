@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsNotEmpty, IsString, Matches } from "class-validator";
-import { CourtIdDto } from "src/review/dto/courtid.dto";
+import { CourtIdDto } from "../../dtos-common/courtid.dto";
 
 export class GetAvailableSlotsDto extends CourtIdDto {
     

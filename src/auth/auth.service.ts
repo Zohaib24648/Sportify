@@ -289,4 +289,48 @@ throw new InternalServerErrorException('An unexpected error occurred', error.mes
       throw error;
     }
   }
+
+
+  async googleLogin(req) {
+    if (!req.user) {
+      throw new UnauthorizedException('No user from Google');
+    }
+
+    const { email, name , picture } = req.user;
+
+    let user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          email,
+          name,
+          user_pfp_link : picture,
+          email_verified: true,
+        },
+      });
+    }
+
+    if (user) {
+      user = await this.prisma.user.update({
+        where: { email },
+        data: {
+          email,
+          name,
+          user_pfp_link : picture,
+          email_verified: true,
+        },
+      });
+    }
+    
+    console.log(user);
+
+    const token = await this.generateToken(
+      user.id,
+      user.email,
+      user.roles,
+      this.TOKEN_EXPIRY.ACCESS,
+    );
+
+    return { access_token: token };
+  }
 }

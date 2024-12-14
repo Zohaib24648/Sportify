@@ -125,4 +125,19 @@ export class AuthController {
     const userId = req.user.userId;
   return await this.authService.changePassword(userId, dto);
   }
+
+
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  googleAuth(@Req() req) {
+    // Initiates Google OAuth2 login flow
+  }
+
+  @Get('google/redirect')
+  @UseGuards(AuthGuard('google'))
+  googleAuthRedirect(@Req() req) {
+    return this.authService.googleLogin(req);
+  }
+
+  
 }

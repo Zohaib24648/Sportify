@@ -79,9 +79,9 @@ model User {
   email                String    @unique
   email_verified       Boolean   @default(false)
   phone_verified       Boolean   @default(false)
-  password_hash        String
+  password_hash        String?
   user_pfp_link        String?    
-  user_phone           String    @unique
+  user_phone           String?    @unique
   secondary_user_phone String?
   roles                ROLE[]    @default([user])
   created_at           DateTime  @default(now())

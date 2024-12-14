@@ -322,8 +322,6 @@ throw new InternalServerErrorException('An unexpected error occurred', error.mes
       });
     }
     
-    console.log(user);
-
     const token = await this.generateToken(
       user.id,
       user.email,

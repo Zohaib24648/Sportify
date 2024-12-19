@@ -25,8 +25,6 @@ export class SlotController {
     status: 404,
     description: 'No available slots found for the given court and date',
   })
-  @ApiBearerAuth()
-  @Roles('admin')
   @Post('get_available_slots')
   getAvailableSlotsForDay(@Body() dto: GetAvailableSlotsDto) {
     return this.slotService.getAvailableSlotsForDay(dto);
@@ -37,8 +35,6 @@ export class SlotController {
     description: 'Get all slots',
     type: [SlotDto],
   })
-  @ApiBearerAuth()
-  @Roles('admin')
   @Get('get_slots')
   getSlots() {
     return this.slotService.getSlots();

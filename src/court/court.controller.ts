@@ -64,8 +64,6 @@ export class CourtController {
   @ApiResponse({ status: 500, description: 'Undefined Error' })
   @ApiBearerAuth()
   //Get Courts
-  @Roles('admin', 'user')
-  @UseGuards(AuthGuard('jwt'))
   @Get('get_courts')
   getCourts() {
     return this.court_service.get_Courts();
@@ -78,7 +76,7 @@ export class CourtController {
   @ApiResponse({ status: 500, description: 'Undefined Error' })
   @ApiBearerAuth()
   //Get Courts
-  @Roles('admin', 'user')
+  @Roles('admin')
   @UseGuards(AuthGuard('jwt'))
   @Get('get_all_courts')
   getAllCourts() {
@@ -199,8 +197,6 @@ export class CourtController {
   })
   @ApiResponse({ status: 404, description: 'Court not found' })
   @ApiResponse({ status: 500, description: 'Undefined Error' })
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
   @Get('get_court_details/:id')
   get_court_details(@Param('id') id: string) {
     return this.court_service.get_court_details(id);
@@ -282,8 +278,6 @@ export class CourtController {
 
   @ApiOperation({ summary: 'get media of a court' })
   @ApiBearerAuth()
-  @Roles('admin', 'user')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Get('get_court_media/:id')
   get_court_media(@Param('id') id: string) {
     return this.court_service.getCourtMedia(id);

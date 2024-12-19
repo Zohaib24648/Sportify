@@ -48,6 +48,12 @@ export class BookingService {
 
     async createBooking(dto : SlotDto, dto1 : any) {
       const { userId } = dto1;
+      const { court_id, start_time, end_time } = dto;
+      console.log(dto);
+      const court = await this.courtService.get_court_details(court_id);
+      if (!court) {
+        throw new NotFoundException('Court not found');
+      }
       const user_id = userId;
             if (!this.slotService.timevalidator(dto)) {
         throw new BadRequestException('Invalid time slot');

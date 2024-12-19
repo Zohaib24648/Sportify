@@ -44,8 +44,9 @@ export class SlotService {
     console.log("Printing from time Validator")
     console.log(`Dto checked , without conversion , Starttime : ${start_time} , Endtime : ${end_time}`);
 
-    const startTime = dayjs(start_time,'Asia/Karachi');
-    const endTime = dayjs(end_time,'Asia/Karachi');
+    const startTime = dayjs.tz(start_time, 'Asia/Karachi');
+    const endTime = dayjs.tz(end_time, 'Asia/Karachi');
+  
 
     console.log(`Dto checked , with conversion , Starttime : ${startTime} , Endtime : ${endTime}`);
 

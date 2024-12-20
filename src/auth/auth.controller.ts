@@ -5,11 +5,15 @@ import {
   Get,
   Param,
   Post,
+  Query,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignupDto, SigninDto } from './dto';
+import { Request, Response } from 'express'; // <-- Import from express
+
 import {
   ApiOperation,
   ApiResponse,
@@ -130,13 +134,21 @@ export class AuthController {
   @Get('google')
   @UseGuards(AuthGuard('google'))
   googleAuth(@Req() req) {
-    // Initiates Google OAuth2 login flow
-  }
+
+      }
+
+      @Get('print-token')
+      printToken(@Query('token') token: string, @Res() res: Response) {
+        console.log('Token received:', token);
+        return res.send(`Token: ${token}`);
+      }
+
+
 
   @Get('google/redirect')
   @UseGuards(AuthGuard('google'))
-  googleAuthRedirect(@Req() req) {
-    return this.authService.googleLogin(req);
+  googleAuthRedirect(@Req() req: Request, @Res() res: Response) {
+    return this.authService.googleLogin(req, res);
   }
 
   

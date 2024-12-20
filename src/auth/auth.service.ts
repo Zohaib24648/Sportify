@@ -7,6 +7,7 @@ import {
   UnauthorizedException,
   Logger,
 } from '@nestjs/common';
+
 import { Prisma, ROLE, User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as argon from 'argon2';
@@ -17,6 +18,7 @@ import { SigninDto } from './dto/signin.dto';
 import { ResetPassDto } from './dto/resetpass.dto';
 import { ChangePasswordDto } from './dto/changepass.dto';
 import { EmailDto } from 'src/dtos-common/email.dto';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -300,44 +302,43 @@ throw new InternalServerErrorException('An unexpected error occurred', error.mes
   }
 
 
-  async googleLogin(req) {
+  async googleLogin(req, res: Response) {
     if (!req.user) {
       throw new UnauthorizedException('No user from Google');
     }
-
-    const { email, name , picture } = req.user;
-
+  
+    const { email, name, picture } = req.user;
+  
     let user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
       user = await this.prisma.user.create({
         data: {
           email,
           name,
-          user_pfp_link : picture,
+          user_pfp_link: picture,
           email_verified: true,
         },
       });
-    }
-
-    if (user) {
+    } else {
       user = await this.prisma.user.update({
         where: { email },
         data: {
           email,
           name,
-          user_pfp_link : picture,
+          user_pfp_link: picture,
           email_verified: true,
         },
       });
     }
-    
+  
     const token = await this.generateToken(
       user.id,
       user.email,
       user.roles,
       this.TOKEN_EXPIRY.ACCESS,
     );
-
-    return { access_token: token };
+    // return res.redirect(`http://localhost:3000/auth/print-token?token=${token}`);
+    return res.redirect(`${process.env.FRONTEND_URL}/auth/google?token=${token}`);
+  
   }
 }

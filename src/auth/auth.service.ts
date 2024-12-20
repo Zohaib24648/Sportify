@@ -92,10 +92,9 @@ export class AuthService {
   }
 
   // Signup method
-  async signup(dto: SignupDto): Promise<{ message: string }> {
+  async signup(dto: SignupDto) {
     const { email, password, name, user_phone, secondary_user_phone } = dto;
     const hashedPassword = await this.hashPassword(password);
-
     try {
       const user = await this.prisma.user.create({
         data: {
@@ -104,14 +103,24 @@ export class AuthService {
           name,
           user_phone,
           secondary_user_phone,
+          email_verified: true,
         },
       });
 
-      await this.sendVerificationEmail(user);
+      const token = await this.generateToken(
+        user.id,
+        user.email,
+        user.roles,
+        this.TOKEN_EXPIRY.ACCESS,
+      );
 
-      return {
-        message: 'User created successfully, verification email sent.',
-      };
+      return { access_token: token };
+
+      // await this.sendVerificationEmail(user);
+
+      // return {
+      //   message: 'User created successfully, verification email sent.',
+      // };
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -195,9 +204,9 @@ export class AuthService {
         throw new UnauthorizedException('Invalid email or password');
       }
 
-      if (!user.email_verified) {
-        throw new UnauthorizedException('Email not verified');
-      }
+      // if (!user.email_verified) {
+      //   throw new UnauthorizedException('Email not verified');
+      // }
 
       const token = await this.generateToken(
         user.id,
